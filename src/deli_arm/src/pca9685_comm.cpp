@@ -1,9 +1,9 @@
-#include "deli_hardware_interface/pca9685_comm.h"
+#include "../include/pca9685_comm.h"
 #include <unistd.h>
 #include <cmath>
 
-#include "deli_hardware_interface/Constants.h"
-#include "deli_hardware_interface/I2CPeripheral.h"
+#include "../include/Constants.h"
+#include "../include/I2CPeripheral.h"
 
 namespace PiPCA9685 {
 

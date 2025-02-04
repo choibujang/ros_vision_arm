@@ -1,4 +1,4 @@
-#include "deli_hardware_interface/I2CPeripheral.h"
+#include "../include/I2CPeripheral.h"
 #include <unistd.h>
 #include <fcntl.h>
 #include <sys/ioctl.h>
