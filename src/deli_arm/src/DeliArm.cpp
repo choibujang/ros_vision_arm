@@ -1,32 +1,38 @@
 #include "../include/DeliArm.h"
 
-void DeliArm::home() {
-    // home_angles = [90, 90, 90, 150, ?, ?]
-    // ready_angles = [90, 50, 40, 170, ?, ?]
-    writeRasp(base_joints);
-}
-
-
-void DeliArm::calcIK(double x, double y, double z) {
-    std::cout << "(x, y, z) = " << x << ", " << y << ", " << z << std::endl;
-    if (y == 0.0) {
-        if (x <= 0.0) {
+std::vector<double> DeliArm::calcIK(std::vector<double> pick_target_pos) {
+    double target_x = pick_target_pos[0];
+    double target_y = pick_target_pos[1];
+    double target_z = pick_target_pos[2];
+    std::vector<double> ik_result = {
+        std::nan(""),
+        std::nan(""),
+        std::nan(""),
+        std::nan(""),
+        fixed_joint4,
+        close_gripper};
+    std::cout << "(target_x, target_y, target_z) = " << target_x << ", " << target_y << ", " << target_z << std::endl;
+    if (target_y == 0.0) {
+        if (target_x <= 0.0) {
             std::cout << "invalid location" << std::endl;
-            // goal_joint = {};
-            return;
+            return {};
         } else {
-            setGoalJoint(0, 90.0);
+            ik_result[0] = convertJoint(0, 0.0);
         }
     } else {
-        double theta0 = std::atan2(y, x) * (180.0 / M_PI);
+        double theta0 = std::atan2(target_y, target_x) * (180.0 / M_PI);
         std::cout << "theta0: " << theta0 << std::endl;
-        setGoalJoint(0, theta0);
+        ik_result[0] = convertJoint(0, theta0);
     }
 
-    double px = sqrt(pow(x, 2) + pow(y, 2));
-    double py = z - links[0];
+    double px = sqrt(pow(target_x, 2) + pow(target_y, 2));
+    std::cout << "px: " << px << std::endl;
+    double py = target_z - links[0];
+    std::cout << "py: " << py << std::endl;
 
-    double numerator = pow(links[1] + links[2], 2) - (pow(px, 2) + pow(py, 2));
+    std::cout << "(link1 + link2) ^ 2: " << pow((links[1] + links[2]), 2) << std::endl;
+    std::cout << "(px^2) + (py^2): " << (pow(px, 2) + pow(py, 2)) << std::endl;
+    double numerator = pow((links[1] + links[2]), 2) - (pow(px, 2) + pow(py, 2));
     std::cout << "numerator: " << numerator << std::endl;
     double denominator = (pow(px, 2) + pow(py, 2)) - (pow(links[1] - links[2], 2));
     std::cout << "denominator: " << denominator << std::endl;
@@ -38,75 +44,57 @@ void DeliArm::calcIK(double x, double y, double z) {
 
     double term1 = atan2(py, px);
     std::cout << "term1: " << term1 << std::endl;
-    double term2 = atan2(links[2] * sin(theta2_positive), links[1] + links[2] * cos(theta2_positive));
+    double term2 = atan2(links[2] * sin(theta2_negative), links[1] + links[2] * cos(theta2_negative));
     std::cout << "term2: " << term2 << std::endl;
 
     double theta1 = term1 - term2;
     std::cout << "theta1: " << theta1 << std::endl;
 
-    setGoalJoint(1, 180 - theta1);
-    setGoalJoint(2, 90 - theta2_positive);
+    theta1 = theta1 * (180.0 / M_PI);
+    theta2_negative = theta2_negative * (180.0 / M_PI);
+    ik_result[1] = convertJoint(1, theta1);
+    ik_result[2] = convertJoint(2, theta2_negative / 2);
+    ik_result[3] = convertJoint(3, theta2_negative / 2 + 10);
+
+    return ik_result;
 }
 
-void DeliArm::writeRasp(std::vector<double> joints) {
+void DeliArm::writeRasp(int joint_num, double angle) {
     int min_pulse = 102; 
     int max_pulse = 512; 
 
-    int duration = 6000;
-    int interval = 40;
+    int duration = 3000;
+    int interval = 20;
     int num_steps = duration / interval; 
 
-    std::vector<double> prev_joints = base_joints;
-    std::ifstream file_in("joints_data.txt");
-    if (file_in.is_open()) {
-        std::string line;
-        std::getline(file_in, line);
-        std::istringstream iss(line);
-        for (int i = 0; i < 6 && iss >> prev_joints[i]; i++);
-        file_in.close();
-    } else {
-        std::cerr << "Unable to open file" << std::endl;
+    int current_pulse = pca.get_pwm(joint_num);
+    int target_pulse = min_pulse + (angle / 180.0) * (max_pulse - min_pulse);
+
+    for (int step = 0; step <= num_steps; step++) {
+        float t = (float)step / num_steps;
+        float ease_ratio = t * t * (3 - 2 * t);
+        int smooth_pulse = current_pulse + (target_pulse - current_pulse) * ease_ratio;
+        pca.set_pwm(joint_num, 0, smooth_pulse);
+        std::this_thread::sleep_for(std::chrono::milliseconds(interval));  // 1000ms (1초) 대기
+
     }
-
-    for (int i = 0; i < joints.size(); i++) {
-        int current_pulse = pca.get_pwm(i);
-        if (current_pulse == 0) {
-            current_pulse = min_pulse + (prev_joints[i] / 180.0) * (max_pulse - min_pulse);
-        }
-        int target_pulse = min_pulse + (joints[i] / 180.0) * (max_pulse - min_pulse);
-
-        for (int step = 0; step <= num_steps; step++) {
-            float t = (float)step / num_steps;
-            float ease_ratio = t * t * (3 - 2 * t);
-            int smooth_pulse = current_pulse + (target_pulse - current_pulse) * ease_ratio;
-            pca.set_pwm(i, 0, smooth_pulse);
-            std::this_thread::sleep_for(std::chrono::milliseconds(interval));  // 1000ms (1초) 대기
-
-        }
-    }
-
-    std::ofstream file("joints_data.txt");
-    if (file.is_open()) {
-        for (double joint : joints) {
-            file << joint << " ";
-        }
-        file << std::endl;
-        file.close();
-    } else {
-        std::cerr << "Unable to open file" << std::endl;
-    }
-
 }
 
-void DeliArm::moveToPosition() {
+void DeliArm::move321JointsToNeatPos() {
+    for (const auto& pair : neat_321joints) {
+        writeRasp(pair.first, pair.second);
+    }
+}
 
 
-    // for (int i = 0; i < joints.size(); i++) {
-    //     int pulse = min_pulse + (joints[i] / 180.0) * (max_pulse - min_pulse);
-    //     int target_pulse = min_pulse + (joints[i] / 180.0) * (max_pulse - min_pulse);
+void DeliArm::move321Joints(std::vector<double> goal_joints) {
+    auto start = std::chrono::high_resolution_clock::now();
+
+    for (int i = goal_joints.size()-1; i > 0; i--) 
+        writeRasp(i, goal_joints[i]);
         
-    
-    //     pca.set_pwm(i, 0, pulse);
-    // }
+    auto end = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double, std::milli> elapsed = end - start;
+    std::cout << "writeRasp time: " << elapsed.count() << std::endl;
 
 }
