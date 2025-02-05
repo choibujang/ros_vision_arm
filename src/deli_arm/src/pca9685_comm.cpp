@@ -1,6 +1,9 @@
 #include "../include/pca9685_comm.h"
 #include <unistd.h>
 #include <cmath>
+#include <chrono>
+#include <thread>
+#include <iostream>
 
 #include "../include/Constants.h"
 #include "../include/I2CPeripheral.h"
@@ -57,6 +60,7 @@ uint16_t PCA9685::get_pwm(const int channel) {
   uint8_t off_high = i2c_dev->ReadRegisterByte(LED0_OFF_H + channel_offset);
 
   uint16_t pulse = (off_high << 8) | off_low;
+
   return pulse;
 }
 

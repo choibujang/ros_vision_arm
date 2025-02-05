@@ -20,7 +20,7 @@ public:
         int min_pulse = 102; 
         int max_pulse = 512; 
 
-        int duration = 3000;
+        int duration = 2000;
         int interval = 20;
         int num_steps = duration / interval; 
 
@@ -108,7 +108,7 @@ private:
 
     double fixed_joint4 = 120.0;
     double open_gripper = 90.0;
-    double close_gripper = 110.0;
+    double close_gripper = 106.0;
 
     PiPCA9685::PCA9685 pca;
 };

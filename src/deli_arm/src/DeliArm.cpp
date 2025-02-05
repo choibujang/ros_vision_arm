@@ -63,7 +63,7 @@ void DeliArm::writeRasp(int joint_num, double angle) {
     int min_pulse = 102; 
     int max_pulse = 512; 
 
-    int duration = 3000;
+    int duration = 2000;
     int interval = 20;
     int num_steps = duration / interval; 
 
@@ -76,8 +76,8 @@ void DeliArm::writeRasp(int joint_num, double angle) {
         int smooth_pulse = current_pulse + (target_pulse - current_pulse) * ease_ratio;
         pca.set_pwm(joint_num, 0, smooth_pulse);
         std::this_thread::sleep_for(std::chrono::milliseconds(interval));  // 1000ms (1초) 대기
-
     }
+    
 }
 
 void DeliArm::move321JointsToNeatPos() {
