@@ -1,6 +1,10 @@
 cmake_minimum_required(VERSION 3.8)
 project(deli_arm)
 
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic)
 endif()
@@ -12,12 +16,29 @@ find_package(rclcpp REQUIRED)
 find_package(rclcpp_action REQUIRED)
 find_package(rclcpp_components REQUIRED)
 
+include_directories(/usr/include/linux)
+include_directories(/usr/include/c++/12)
+include_directories(/usr/include/x86_64-linux-gnu/c++/12)
+
+add_library(deli_controller
+  src/DeliArm.cpp
+  src/I2CPeripheral.cpp
+  src/pca9685_comm.cpp)
+
+target_link_libraries(deli_controller PRIVATE i2c)
+
+target_include_directories(deli_controller PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>)
+
 add_library(action_server SHARED
   src/deli_arm_action_server.cpp)
 
-target_include_directories(action_server PRIVATE
+target_include_directories(action_server PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include>)
+
+target_link_libraries(action_server deli_controller)
 
 # target_compile_definitions(action_server
 #   PRIVATE "CUSTOM_ACTION_CPP_BUILDING_DLL")

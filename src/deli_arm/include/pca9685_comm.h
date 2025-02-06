@@ -3,6 +3,14 @@
 
 #include <string>
 #include <memory>
+#include <unistd.h>
+#include <cmath>
+#include <chrono>
+#include <thread>
+#include <iostream>
+
+#include "Constants.h"
+#include "I2CPeripheral.h"
 
 namespace PiPCA9685 {
 

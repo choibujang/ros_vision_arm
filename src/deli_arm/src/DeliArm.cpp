@@ -1,4 +1,4 @@
-#include "../include/DeliArm.h"
+#include "DeliArm.h"
 
 std::vector<double> DeliArm::calcIK(std::vector<double> pick_target_pos) {
     double target_x = pick_target_pos[0];

@@ -1,6 +1,8 @@
 #ifndef RPY_PWM_HAT_CONSTANTS_H
 #define RPY_PWM_HAT_CONSTANTS_H
 #include <cstdint>
+#include <cstddef>
+#include <cstring>
 
 namespace PiPCA9685 {
 
