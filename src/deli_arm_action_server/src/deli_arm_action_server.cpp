@@ -1,0 +1,110 @@
+#include <functional>
+#include <memory>
+#include <thread>
+
+#include "rclcpp/rclcpp.hpp"
+#include "rclcpp_action/rclcpp_action.hpp"
+#include "rclcpp_components/register_node_macro.hpp"
+
+#include "deli_arm_action_interfaces/action/dispatch_manipulation_task.h"
+
+// #include "custom_action_cpp/visibility_control.h"
+
+namespace deli_arm_action_server
+{
+class DeliArmActionServer : public rclcpp::Node
+{
+public:
+  using DispatchManipulationTask = deli_arm_action_interfaces::action::DispatchManipulationTask;
+  using GoalHandleDispatchManipulationTask = rclcpp_action::ServerGoalHandle<DispatchManipulationTask>;
+
+  explicit DeliArmActionServer(const rclcpp::NodeOptions & options = rclcpp::NodeOptions())
+  : Node("deli_arm_action_server", options)
+  {
+    using namespace std::placeholders;
+
+    auto handle_goal = [this](
+      const rclcpp_action::GoalUUID & uuid,
+      std::shared_ptr<const DispatchManipulationTask::Goal> goal)
+    {
+      RCLCPP_INFO(this->get_logger(), "Received goal request with order %d", goal->order);
+      (void)uuid;
+      return rclcpp_action::GoalResponse::ACCEPT_AND_EXECUTE;
+    };
+
+    auto handle_cancel = [this](
+      const std::shared_ptr<GoalHandleDispatchManipulationTask> goal_handle)
+    {
+      RCLCPP_INFO(this->get_logger(), "Received request to cancel goal");
+      (void)goal_handle;
+      return rclcpp_action::CancelResponse::ACCEPT;
+    };
+
+    auto handle_accepted = [this](
+      const std::shared_ptr<GoalHandleDispatchManipulationTask> goal_handle)
+    {
+      // this needs to return quickly to avoid blocking the executor,
+      // so we declare a lambda function to be called inside a new thread
+      auto execute_in_thread = [this, goal_handle](){return this->execute(goal_handle);};
+      std::thread{execute_in_thread}.detach();
+    };
+
+    this->action_server_ = rclcpp_action::create_server<DispatchManipulationTask>(
+      this,
+      "DispatchManipulationTask",
+      handle_goal,
+      handle_cancel,
+      handle_accepted);
+  }
+
+private:
+  rclcpp_action::Server<DispatchManipulationTask>::SharedPtr action_server_;
+
+  void execute(const std::shared_ptr<GoalHandleDispatchManipulationTask> goal_handle) {
+    RCLCPP_INFO(this->get_logger(), "Executing goal");
+    rclcpp::Rate loop_rate(1);
+    const auto goal = goal_handle->get_goal();
+
+    std::string target = goal->target_station;
+    std::vector<std::string> items = goal->item_names;
+    std::vector<int32_t> quantities = goal->item_quantities;
+
+
+    auto feedback = std::make_shared<DispatchManipulationTask::Feedback>();
+    auto result = std::make_shared<DispatchManipulationTask::Result>();
+
+
+    for (int i = 0; (i < 5) && rclcpp::ok(); ++i) {
+      // Check if there is a cancel request
+      if (goal_handle->is_canceling()) {
+        result->success = false;
+        result->error_code = 1000;
+        result->error_msg = "client cancel";
+        goal_handle->canceled(result);
+        RCLCPP_INFO(this->get_logger(), "Goal canceled");
+        return;
+      }
+      // Update sequence
+      feedback->progress = i;
+      // Publish feedback
+      goal_handle->publish_feedback(feedback);
+      RCLCPP_INFO(this->get_logger(), "Publish feedback");
+
+      loop_rate.sleep();
+    }
+
+    // Check if goal is done
+    if (rclcpp::ok()) {
+      result->success = true;
+      result->error_code = 0;
+      result->error_msg = "success";
+      goal_handle->succeed(result);
+      RCLCPP_INFO(this->get_logger(), "Goal succeeded");
+    }
+  };
+
+};  // class FibonacciActionServer
+
+}  // namespace custom_action_cpp
+
+RCLCPP_COMPONENTS_REGISTER_NODE(deli_arm_action_server::DeliArmActionServer)
