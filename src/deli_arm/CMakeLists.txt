@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.8)
-project(deli_arm_action_server)
+project(deli_arm)
 
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic)
@@ -7,7 +7,7 @@ endif()
 
 # find dependencies
 find_package(ament_cmake REQUIRED)
-find_package(deli_arm_action_interfaces REQUIRED)
+find_package(deli_arm_interfaces REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(rclcpp_action REQUIRED)
 find_package(rclcpp_components REQUIRED)
@@ -23,11 +23,11 @@ target_include_directories(action_server PRIVATE
 #   PRIVATE "CUSTOM_ACTION_CPP_BUILDING_DLL")
 
 ament_target_dependencies(action_server
-  "deli_arm_action_interfaces"
+  "deli_arm_interfaces"
   "rclcpp"
   "rclcpp_action"
   "rclcpp_components")
-rclcpp_components_register_node(action_server PLUGIN "deli_arm_action_server::DeliArmActionServer" EXECUTABLE deli_arm_action_server)
+rclcpp_components_register_node(action_server PLUGIN "deli_arm::DeliArmActionServer" EXECUTABLE deli_arm_action_server)
 install(TARGETS
   action_server
   ARCHIVE DESTINATION lib

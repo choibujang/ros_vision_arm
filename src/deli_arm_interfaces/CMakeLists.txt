@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.8)
-project(deli_arm_action_interfaces)
+project(deli_arm_interfaces)
 
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic)

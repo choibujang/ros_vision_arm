@@ -6,16 +6,16 @@
 #include "rclcpp_action/rclcpp_action.hpp"
 #include "rclcpp_components/register_node_macro.hpp"
 
-#include "deli_arm_action_interfaces/action/dispatch_manipulation_task.h"
+#include "deli_arm_interfaces/action/dispatch_manipulation_task.hpp"
 
 // #include "custom_action_cpp/visibility_control.h"
 
-namespace deli_arm_action_server
+namespace deli_arm
 {
 class DeliArmActionServer : public rclcpp::Node
 {
 public:
-  using DispatchManipulationTask = deli_arm_action_interfaces::action::DispatchManipulationTask;
+  using DispatchManipulationTask = deli_arm_interfaces::action::DispatchManipulationTask;
   using GoalHandleDispatchManipulationTask = rclcpp_action::ServerGoalHandle<DispatchManipulationTask>;
 
   explicit DeliArmActionServer(const rclcpp::NodeOptions & options = rclcpp::NodeOptions())
@@ -27,7 +27,7 @@ public:
       const rclcpp_action::GoalUUID & uuid,
       std::shared_ptr<const DispatchManipulationTask::Goal> goal)
     {
-      RCLCPP_INFO(this->get_logger(), "Received goal request with order %d", goal->order);
+      RCLCPP_INFO(this->get_logger(), "Received goal request with target station %s", goal->target_station.c_str());
       (void)uuid;
       return rclcpp_action::GoalResponse::ACCEPT_AND_EXECUTE;
     };
@@ -107,4 +107,4 @@ private:
 
 }  // namespace custom_action_cpp
 
-RCLCPP_COMPONENTS_REGISTER_NODE(deli_arm_action_server::DeliArmActionServer)
+RCLCPP_COMPONENTS_REGISTER_NODE(deli_arm::DeliArmActionServer)
