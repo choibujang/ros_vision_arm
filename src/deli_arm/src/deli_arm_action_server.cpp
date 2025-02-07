@@ -6,10 +6,8 @@
 
 #include "rclcpp/rclcpp.hpp"
 #include "rclcpp_action/rclcpp_action.hpp"
-#include "rclcpp_components/register_node_macro.hpp"
 
 #include "deli_arm_interfaces/action/dispatch_manipulation_task.hpp"
-// #include "DeliArm.h"
 
 // #include "custom_action_cpp/visibility_control.h"
 
@@ -22,7 +20,7 @@ public:
   using GoalHandleDispatchManipulationTask = rclcpp_action::ServerGoalHandle<DispatchManipulationTask>;
 
   explicit DeliArmActionServer(const rclcpp::NodeOptions & options = rclcpp::NodeOptions())
-  : Node("deli_arm_action_server", options)
+  : Node("deli_arm_action_server", options), deli_arm_controller_(std::make_shared<DeliArmController>())
   {
     using namespace std::placeholders;
 
@@ -62,6 +60,7 @@ public:
 
 private:
   rclcpp_action::Server<DispatchManipulationTask>::SharedPtr action_server_;
+  std::shared_ptr<DeliArmController> deli_arm_controller_;
 
   void execute(const std::shared_ptr<GoalHandleDispatchManipulationTask> goal_handle) {
     RCLCPP_INFO(this->get_logger(), "Executing goal");
@@ -110,4 +109,11 @@ private:
 
 }  // namespace custom_action_cpp
 
-RCLCPP_COMPONENTS_REGISTER_NODE(deli_arm::DeliArmActionServer)
+
+int main(int argc, char **argv) {
+  rclcpp::init(argc, argv);
+  auto node = std::make_shared<deli_arm::DeliArmActionServer>();
+  rclcpp::spin(node);
+  rclcpp::shutdown();
+  return 0;
+}

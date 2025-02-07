@@ -1,9 +1,9 @@
-#include "../include/DeliArm.h"
+#include "../include/deli_arm_controller.h"
 #include <iostream>
 #include <unistd.h>
 
 int main() {
-    DeliArm deli_arm;
+    DeliArmController deli_arm;
     int target_joint;
     double target_angle;
 

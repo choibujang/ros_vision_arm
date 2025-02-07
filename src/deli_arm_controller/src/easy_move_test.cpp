@@ -1,7 +1,7 @@
-#include "../include/DeliArm.h"
+#include "../include/deli_arm_controller.h"
 
 int main() {
-    DeliArm deli_arm;
+    DeliArmController deli_arm;
 
     std::vector<double> pick_target_pos = {80, -300, 80};
     std::vector<double> place_target_pos = {200, 260, 90};

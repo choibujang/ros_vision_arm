@@ -1,6 +1,6 @@
-#include "../include/DeliArm.h"
+#include "deli_arm_controller.h"
 
-std::vector<double> DeliArm::calcIK(std::vector<double> pick_target_pos) {
+std::vector<double> DeliArmController::calcIK(std::vector<double> pick_target_pos) {
     double target_x = pick_target_pos[0];
     double target_y = pick_target_pos[1];
     double target_z = pick_target_pos[2];
@@ -59,7 +59,7 @@ std::vector<double> DeliArm::calcIK(std::vector<double> pick_target_pos) {
     return ik_result;
 }
 
-void DeliArm::writeRasp(int joint_num, double angle) {
+void DeliArmController::writeRasp(int joint_num, double angle) {
     int min_pulse = 102; 
     int max_pulse = 512; 
 
@@ -80,14 +80,14 @@ void DeliArm::writeRasp(int joint_num, double angle) {
     
 }
 
-void DeliArm::move321JointsToNeatPos() {
+void DeliArmController::move321JointsToNeatPos() {
     for (const auto& pair : neat_321joints) {
         writeRasp(pair.first, pair.second);
     }
 }
 
 
-void DeliArm::move321Joints(std::vector<double> goal_joints) {
+void DeliArmController::move321Joints(std::vector<double> goal_joints) {
     auto start = std::chrono::high_resolution_clock::now();
 
     for (int i = goal_joints.size()-1; i > 0; i--) 

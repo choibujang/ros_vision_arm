@@ -10,15 +10,11 @@
 #include <fstream>
 #include <iostream>
 #include <sstream>
-#include <rclcpp/rclcpp.hpp>
-#include <cstddef>
-#include <cstring>
+#include "../include/pca9685_comm.h"
 
-#include "pca9685_comm.h"
-
-class DeliArm {
+class DeliArmController {
 public:
-    DeliArm() {
+    DeliArmController() {
         pca.set_pwm_freq(50);
 
         int min_pulse = 102; 

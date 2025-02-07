@@ -10,11 +10,14 @@
 #include <fstream>
 #include <iostream>
 #include <sstream>
-#include "../include/pca9685_comm.h"
+#include <cstddef>
+#include <cstring>
 
-class DeliArm {
+#include "pca9685_comm.h"
+
+class DeliArmController {
 public:
-    DeliArm() {
+    DeliArmController() {
         pca.set_pwm_freq(50);
 
         int min_pulse = 102; 
@@ -83,6 +86,7 @@ public:
     void closeGripper() { writeRasp(5, close_gripper); }
     void moveBaseLink(double angle) { writeRasp(0, angle); }
     void move321Joints(std::vector<double> goal_joints);
+    void pick_and_place(std::function<void(float32)> feedback_callback, std::function<void(bool, int, std::string> result_callback));
 
 private:
     std::vector<double> links = {100, 104, 293}; // mm, 손목1 103 110
