@@ -1,0 +1,6 @@
+string[] item_names
+int32[] item_quantities
+---
+float32[] x
+float32[] y
+float32[] z

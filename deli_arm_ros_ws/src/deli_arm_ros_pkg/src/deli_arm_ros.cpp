@@ -12,14 +12,17 @@
 
 namespace deli_arm
 {
-class DeliArmActionServer : public rclcpp::Node
+class DeliArmRos : public rclcpp::Node
 {
 public:
   using DispatchManipulationTask = deli_arm_interfaces::action::DispatchManipulationTask;
+  using ProductDetection = deli_arm_interfaces::srv::ProductDetection
   using GoalHandleDispatchManipulationTask = rclcpp_action::ServerGoalHandle<DispatchManipulationTask>;
 
-  explicit DeliArmActionServer(const rclcpp::NodeOptions & options = rclcpp::NodeOptions())
-  : Node("deli_arm_action_server", options), deli_arm_controller_(std::make_shared<DeliArmController>())
+  explicit DeliArmRos(const rclcpp::NodeOptions & options = rclcpp::NodeOptions())
+  : Node("deli_arm_ros", options),
+    deli_arm_controller_(std::make_shared<DeliArmController>()),
+    deli_cam_controller_(std::make_shared<DeliArmController>())
   {
     using namespace std::placeholders;
 
@@ -55,11 +58,16 @@ public:
       handle_goal,
       handle_cancel,
       handle_accepted);
+    
+    this->service_client_ = this->create_client<ProductDetection>("ProductDetectService");
+    
   }
 
 private:
   rclcpp_action::Server<DispatchManipulationTask>::SharedPtr action_server_;
+  rclcpp::Client<ProductDetection>::SharedPtr service_client_;
   std::shared_ptr<DeliArmController> deli_arm_controller_;
+  std::shared_ptr<DeliCamController> deli_cam_controller_;
 
   void execute(const std::shared_ptr<GoalHandleDispatchManipulationTask> goal_handle) {
     RCLCPP_INFO(this->get_logger(), "Executing goal");
@@ -70,9 +78,32 @@ private:
     std::vector<std::string> items = goal->item_names;
     std::vector<int32_t> quantities = goal->item_quantities;
 
-
     auto feedback = std::make_shared<DispatchManipulationTask::Feedback>();
     auto result = std::make_shared<DispatchManipulationTask::Result>();
+    auto request = std::make_shared<ProductDetection>();
+
+    request->item_names = items;
+    request->item_quantities = quantities;
+
+    while (!client->wait_for_service(1s)) {
+      if (!rclcpp::ok()) {
+          RCLCPP_ERROR(rclcpp::get_logger("rclcpp"), "Interrupted while waiting for the service. Exiting.");
+          return 0;
+      }
+      RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "service not available, waiting again...");
+    }
+
+    auto result = client->async_send_request(request);
+
+    if (rclcpp::spin_until_future_complete(node, result) == rclcpp::FutureReturnCode::SUCCESS) {
+      RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "Sum: %ld", result.get()->sum);
+    } else {
+      RCLCPP_ERROR(rclcpp::get_logger("rclcpp"), "Failed to call service add_two_ints");
+    }
+
+    std::vector<float> target_x = result.get()->x;
+    std::vector<float> target_y = result.get()->y;
+    std::vector<float> target_z = result.get()->z;
 
 
     for (int i = 0; (i < 5) && rclcpp::ok(); ++i) {

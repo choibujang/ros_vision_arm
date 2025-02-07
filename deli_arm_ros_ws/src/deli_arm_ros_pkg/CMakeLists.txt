@@ -18,21 +18,21 @@ find_package(rclcpp_action REQUIRED)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../../../deli_arm_controller/include)
 
 add_executable(
-  deli_arm_action_server src/deli_arm_action_server.cpp
+  deli_arm_ros src/deli_arm_ros.cpp
   ../../../deli_arm_controller/src/deli_arm_controller.cpp
   ../../../deli_arm_controller/src/I2CPeripheral.cpp
   ../../../deli_arm_controller/src/pca9685_comm.cpp
   )
 
-target_link_libraries(deli_arm_action_server i2c)
+target_link_libraries(deli_arm_ros i2c)
 
-ament_target_dependencies(deli_arm_action_server
+ament_target_dependencies(deli_arm_ros
   "deli_arm_interfaces"
   "rclcpp"
   "rclcpp_action")
 
 install(TARGETS
-  deli_arm_action_server
+  deli_arm_ros
   DESTINATION lib/${PROJECT_NAME})
 
 if(BUILD_TESTING)
