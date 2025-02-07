@@ -8,8 +8,7 @@
 #include "rclcpp_action/rclcpp_action.hpp"
 
 #include "deli_arm_interfaces/action/dispatch_manipulation_task.hpp"
-
-// #include "custom_action_cpp/visibility_control.h"
+#include "deli_arm_controller.h"
 
 namespace deli_arm
 {

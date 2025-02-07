@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.8)
-project(deli_arm)
+project(deli_arm_ros_pkg)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -15,28 +15,21 @@ find_package(deli_arm_interfaces REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(rclcpp_action REQUIRED)
 
-include_directories(/usr/include/x86_64-linux-gnu/c++/12)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../../../deli_arm_controller/include)
 
-add_library(deli_controller
-  src/deli_arm_controller.cpp
-  src/I2CPeripheral.cpp
-  src/pca9685_comm.cpp)
+add_executable(
+  deli_arm_action_server src/deli_arm_action_server.cpp
+  ../../../deli_arm_controller/src/deli_arm_controller.cpp
+  ../../../deli_arm_controller/src/I2CPeripheral.cpp
+  ../../../deli_arm_controller/src/pca9685_comm.cpp
+  )
 
-target_link_libraries(deli_controller PUBLIC i2c)
-
-target_include_directories(deli_controller PUBLIC
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-  $<INSTALL_INTERFACE:include>)
-
-add_executable(deli_arm_action_server src/deli_arm_action_server.cpp)
-
-target_link_libraries(deli_arm_action_server deli_controller)
+target_link_libraries(deli_arm_action_server i2c)
 
 ament_target_dependencies(deli_arm_action_server
   "deli_arm_interfaces"
   "rclcpp"
   "rclcpp_action")
-
 
 install(TARGETS
   deli_arm_action_server

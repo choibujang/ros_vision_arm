@@ -1,4 +1,4 @@
-#include "I2CPeripheral.h"
+#include "../include/I2CPeripheral.h"
 
 namespace PiPCA9685 {
 

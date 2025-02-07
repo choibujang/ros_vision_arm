@@ -1,12 +1,4 @@
 #include "../include/pca9685_comm.h"
-#include <unistd.h>
-#include <cmath>
-#include <chrono>
-#include <thread>
-#include <iostream>
-
-#include "../include/Constants.h"
-#include "../include/I2CPeripheral.h"
 
 namespace PiPCA9685 {
 

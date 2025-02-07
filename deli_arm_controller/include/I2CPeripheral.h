@@ -3,6 +3,7 @@
 
 #include <cstdint>
 #include <string>
+#include "I2CPeripheral.h"
 #include <unistd.h>
 #include <fcntl.h>
 #include <sys/ioctl.h>
@@ -12,8 +13,6 @@ extern "C" {
 #include <i2c/smbus.h>
 }
 #include <system_error>
-#include <cstddef>
-#include <cstring>
 
 namespace PiPCA9685 {
 
