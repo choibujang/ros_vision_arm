@@ -11,23 +11,29 @@ endif()
 
 # find dependencies
 find_package(ament_cmake REQUIRED)
-find_package(deli_arm_interfaces REQUIRED)
+find_package(deli_interfaces REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(rclcpp_action REQUIRED)
 
+set(OrbbecSDK_DIR "../../../../OrbbecSDK")
+find_package(OrbbecSDK REQUIRED)
+
+
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../../../deli_arm_controller/include)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../../../deli_cam_controller/include)
 
 add_executable(
   deli_arm_ros src/deli_arm_ros.cpp
   ../../../deli_arm_controller/src/deli_arm_controller.cpp
   ../../../deli_arm_controller/src/I2CPeripheral.cpp
   ../../../deli_arm_controller/src/pca9685_comm.cpp
+  ../../../deli_cam_controller/src/deli_cam_controller.cpp
   )
 
-target_link_libraries(deli_arm_ros i2c)
+target_link_libraries(deli_arm_ros i2c OrbbecSDK::OrbbecSDK)
 
 ament_target_dependencies(deli_arm_ros
-  "deli_arm_interfaces"
+  "deli_interfaces"
   "rclcpp"
   "rclcpp_action")
 
