@@ -1,76 +1,60 @@
-#include "libobsensor/ObSensor.hpp"
+// #include "utils.hpp"
 #include "libobsensor/hpp/Pipeline.hpp"
 #include "libobsensor/hpp/Error.hpp"
+#include "libobsensor/ObSensor.hpp"
+#include <chrono>
 #include <iostream>
+#define ESC 27
 
-// const char *metaDataTypes[] = { "TIMESTAMP",
-//                                 "SENSOR_TIMESTAMP",
-//                                 "FRAME_NUMBER",
-//                                 "AUTO_EXPOSURE",
-//                                 "EXPOSURE",
-//                                 "GAIN",
-//                                 "AUTO_WHITE_BALANCE",
-//                                 "WHITE_BALANCE",
-//                                 "BRIGHTNESS",
-//                                 "CONTRAST",
-//                                 "SATURATION",
-//                                 "SHARPNESS",
-//                                 "BACKLIGHT_COMPENSATION",
-//                                 "HUE",
-//                                 "GAMMA",
-//                                 "POWER_LINE_FREQUENCY",
-//                                 "LOW_LIGHT_COMPENSATION",
-//                                 "MANUAL_WHITE_BALANCE",
-//                                 "ACTUAL_FRAME_RATE",
-//                                 "FRAME_RATE",
-//                                 "AE_ROI_LEFT",
-//                                 "AE_ROI_TOP",
-//                                 "AE_ROI_RIGHT",
-//                                 "AE_ROI_BOTTOM",
-//                                 "EXPOSURE_PRIORITY",
-//                                 "HDR_SEQUENCE_NAME",
-//                                 "HDR_SEQUENCE_SIZE",
-//                                 "HDR_SEQUENCE_INDEX",
-//                                 "LASER_POWER",
-//                                 "LASER_POWER_LEVEL",
-//                                 "LASER_STATUS",
-//                                 "GPIO_INPUT_DATA" };
-
-int main() try {
+int main(int argc, char **argv) try {
     // Create a pipeline with default device
     ob::Pipeline pipe;
 
-    // Configure which streams to enable or disable for the Pipeline by creating a Config
-    std::shared_ptr<ob::Config> config = std::make_shared<ob::Config>();
-    config->enableVideoStream(OB_STREAM_COLOR);
+    // Start the pipeline with config (default: depth and color streams)
+    pipe.start();
 
-    // Start the pipeline with config
-    pipe.start(config);
-    auto currentProfile = pipe.getEnabledStreamProfileList()->getProfile(0)->as<ob::VideoStreamProfile>();
-    // Create a window for rendering, and set the resolution of the window
+    auto lastTime = std::chrono::high_resolution_clock::now();
 
     while(true) {
+        // if(kbhit() && getch() == ESC) {
+        //     break;
+        // }
         // Wait for up to 100ms for a frameset in blocking mode.
+        // 카메라 데이터를 가져오기 위한 프레임이 준비될 때까지 대기하는 역할
         auto frameSet = pipe.waitForFrames(100);
         if(frameSet == nullptr) {
             continue;
         }
 
-        // get color frame from frameset
         auto colorFrame = frameSet->colorFrame();
-        if(colorFrame == nullptr) {
-            continue;
+        auto depthFrame = frameSet->depthFrame();
+        auto now = std::chrono::high_resolution_clock::now();
+
+        if (std::chrono::duration_cast<std::chrono::seconds>(now - lastTime).count() >= 1) {
+            if(colorFrame) {
+                uint16_t *data = (uint16_t *)colorFrame->data();
+                std::cout << *data << std::endl;
+            }
+            lastTime = now;
         }
 
-        uint8_t *rgb_data = (uint8_t *)colorFrame->data();
+        // // for Y16 format depth frame, print the distance of the center pixel every 30 frames
+        // if(depthFrame->index() % 30 == 0 && depthFrame->format() == OB_FORMAT_Y16) {
+        //     uint32_t  width  = depthFrame->width();
+        //     uint32_t  height = depthFrame->height();
+        //     float     scale  = depthFrame->getValueScale();
+        //     // depth 프레임 데이터를 담고 있는 버퍼. 픽셀 단위의 depth 값을 포함하는 배열
+        //     uint16_t *data   = (uint16_t *)depthFrame->data();
 
-        std::cout << rgb_data[0] << " " << rgb_data[1] << " " << rgb_data[2] << std::endl;
+        //     // pixel value multiplied by scale is the actual distance value in millimeters
+        //     float centerDistance = data[width * height / 2 + width / 2] * scale;
 
-
-        // Render frameset in the window, only color frames are rendered here.
+        //     // attention: if the distance is 0, it means that the depth camera cannot detect the object（may be out of detection range）
+        //     std::cout << "Facing an object " << centerDistance << " mm away. " << std::endl;
+        // }
     }
 
-    // Stop the Pipeline, no frame data will be generated
+    // Stop the pipeline
     pipe.stop();
 
     return 0;
