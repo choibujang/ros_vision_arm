@@ -11,7 +11,7 @@ int main(int argc, char **argv) try {
     ob::Pipeline pipe;
 
     std::shared_ptr<ob::Config> config = std::make_shared<ob::Config>();
-    config->enableVideoStream(OB_STREAM_COLOR, 640, 400, 30, OB_FORMAT_BGR888);
+    config->enableVideoStream(OB_STREAM_COLOR, 640, 400, 30, OB_FORMAT_RGB888);
 
     // Start the pipeline with config (default: depth and color streams)
     pipe.start(config);

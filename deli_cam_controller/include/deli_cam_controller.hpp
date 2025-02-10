@@ -63,6 +63,10 @@ private:
     const char* server_ip = "192.168.0.76";
     int server_port = 8080;
     bool valid;
+    const int header_size = 8;
+    const int max_udp_payload = 65000;
+    const int max_chunk_size = (max_udp_payload - header_size);
+    const char* frame_end = "END";
 
     int sock;
     struct sockaddr_in server_addr;

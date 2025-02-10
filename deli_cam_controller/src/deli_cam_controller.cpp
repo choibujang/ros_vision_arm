@@ -6,8 +6,6 @@ void DeliCamController::startCam() {
     std::shared_ptr<ob::Config> config = std::make_shared<ob::Config>();
     config->enableVideoStream(OB_STREAM_COLOR);
 
-    std::cout << "Color frame format: " << colorFrame->format() << std::endl;
-
     this->pipe.start(config);
 
     uint32_t frame_id = 0; 
