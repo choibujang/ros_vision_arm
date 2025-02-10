@@ -1,25 +1,17 @@
-cmake_minimum_required(VERSION 3.8)
-project(deli_camera)
+cmake_minimum_required(VERSION 3.1.15)
+project(deli_came_controller)
 
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic)
 endif()
 
-# find dependencies
-find_package(ament_cmake REQUIRED)
-find_package(rclcpp REQUIRED)
-find_package(sensor_msgs REQUIRED)
-find_package(cv_bridge REQUIRED)
-find_package(image_transport REQUIRED)
-find_package(OpenCV REQUIRED)
+add_executable(get_intrinsic_parameter test/get_intrinsic_parameter.cpp)
 
-add_executable(camera_publisher src/camera_publisher.cpp)
-ament_target_dependencies(camera_publisher rclcpp sensor_msgs image_transport cv_bridge OpenCV)
+# find Orbbec SDK
+set(OrbbecSDK_DIR "../../OrbbecSDK")
+find_package(OrbbecSDK REQUIRED)
 
-install(TARGETS
-  camera_publisher
-  DESTINATION lib/${PROJECT_NAME}
-)
+target_link_libraries(get_intrinsic_parameter OrbbecSDK::OrbbecSDK)
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
@@ -32,5 +24,3 @@ if(BUILD_TESTING)
   set(ament_cmake_cpplint_FOUND TRUE)
   ament_lint_auto_find_test_dependencies()
 endif()
-
-ament_package()

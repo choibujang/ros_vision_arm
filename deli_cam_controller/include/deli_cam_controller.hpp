@@ -19,10 +19,22 @@
 class DeliCamController {
 public:
     void sendImage();
-    float getDepth(int cx, int cy);
-
+    float calcCam3D(int u, int v);
+    
 private:
     ob::Pipeline pipe;
+    float fx = 475.328;
+    float fy = 475.328;
+    float cx = 315.204;
+    float cy = 196.601;
+/*
+fx: 475.328
+fy: 475.328
+cx: 315.204
+cy: 196.601
+width: 640
+height: 400
+*/
 };
 
 #endif

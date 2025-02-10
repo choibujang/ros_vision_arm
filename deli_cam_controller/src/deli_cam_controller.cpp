@@ -1,5 +1,10 @@
 #include "../include/deli_cam_controller.hpp"
 
+std::vector<float> DeliCamController::calcCamCoordinatePose(int u, int v, int z) {
+
+    float camera_x = 
+}
+
 int DeliCamController::sendImage() {
     // create socket
     int sockfd;
