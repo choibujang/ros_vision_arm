@@ -5,6 +5,21 @@ if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic)
 endif()
 
+#### for colcon build ###
+#link_directories(../deli_arm_controller/lib)
+#include_directories(../deli_arm_controller/include)
+#
+#add_library(deli_arm_library SHARED IMPORTED)
+#set_target_properties(deli_arm_library PROPERTIES IMPORTED_LOCATION ../deli_arm_controller/lib/libdeli_arm_controller.so)
+#
+#add_library(deli_cam_library STATIC src/deli_cam_controller.cpp)
+#
+#target_link_libraries(deli_cam_library PRIVATE deli_arm_library)
+#
+#install(TARGETS deli_cam_library DESTINATION lib)
+#install(FILES include/deli_cam_controller.hpp DESTINATION include)
+#### for colcon build end ###
+
 add_executable(get_intrinsic_parameter test/get_intrinsic_parameter.cpp)
 add_executable(deli_cam_controller_test test/deli_cam_controller_test.cpp src/deli_cam_controller.cpp)
 add_executable(cam_start_test test/cam_start_test.cpp)

@@ -1,0 +1,16 @@
+# task_manager/action/ManipulationTask.action
+
+# Goal
+string target_station
+string[] item_names
+int32[] item_quantities
+
+---
+# Result
+bool success
+int32 error_code
+string error_msg
+
+---
+# Feedback
+float32 progress
