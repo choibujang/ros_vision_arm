@@ -6,16 +6,18 @@ if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
 endif()
 
 add_executable(get_intrinsic_parameter test/get_intrinsic_parameter.cpp)
-# add_executable(send_img_udp test/send_img_udp.cpp src/deli_cam_controller.cpp)
+add_executable(deli_cam_controller_test test/deli_cam_controller_test.cpp src/deli_cam_controller.cpp)
 add_executable(cam_start_test test/cam_start_test.cpp)
+add_executable(device_test test/device_test.cpp)
 
 # find Orbbec SDK
 set(OrbbecSDK_DIR "../../OrbbecSDK")
 find_package(OrbbecSDK REQUIRED)
 
 target_link_libraries(get_intrinsic_parameter OrbbecSDK::OrbbecSDK)
-# target_link_libraries(send_img_udp OrbbecSDK::OrbbecSDK)
+target_link_libraries(deli_cam_controller_test OrbbecSDK::OrbbecSDK)
 target_link_libraries(cam_start_test OrbbecSDK::OrbbecSDK)
+target_link_libraries(device_test OrbbecSDK::OrbbecSDK)
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)

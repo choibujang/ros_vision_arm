@@ -10,10 +10,12 @@
 #include <cstring>
 #include <cstdlib>
 #include <chrono>
+#include <cerrno>
 
-#include "libobsensor/ObSensor.hpp"
+
 #include "libobsensor/hpp/Pipeline.hpp"
 #include "libobsensor/hpp/Error.hpp"
+#include "libobsensor/ObSensor.hpp"
 
 
 class DeliCamController {
@@ -44,7 +46,7 @@ public:
     }
 
     bool isValid() const { return valid; }
-    void startCam(char *type);
+    void startCam();
 
     void sendImage();
     float calcCam3D(int u, int v);

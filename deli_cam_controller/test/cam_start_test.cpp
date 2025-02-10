@@ -10,8 +10,11 @@ int main(int argc, char **argv) try {
     // Create a pipeline with default device
     ob::Pipeline pipe;
 
+    std::shared_ptr<ob::Config> config = std::make_shared<ob::Config>();
+    config->enableVideoStream(OB_STREAM_COLOR, 640, 400, 30, OB_FORMAT_BGR888);
+
     // Start the pipeline with config (default: depth and color streams)
-    pipe.start();
+    pipe.start(config);
 
     auto lastTime = std::chrono::high_resolution_clock::now();
 
@@ -30,7 +33,7 @@ int main(int argc, char **argv) try {
         auto depthFrame = frameSet->depthFrame();
         auto now = std::chrono::high_resolution_clock::now();
 
-        if (std::chrono::duration_cast<std::chrono::seconds>(now - lastTime).count() >= 1) {
+        if (std::chrono::duration_cast<std::chrono::milliseconds>(now - lastTime).count() >= 30) {
             if(colorFrame) {
                 uint16_t *data = (uint16_t *)colorFrame->data();
                 std::cout << *data << std::endl;
