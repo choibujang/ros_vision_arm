@@ -8,30 +8,65 @@
 #include <unistd.h>
 #include <vector>
 #include <cstring>
+#include <cstdlib>
+#include <chrono>
 
+#include "libobsensor/ObSensor.hpp"
 #include "libobsensor/hpp/Pipeline.hpp"
 #include "libobsensor/hpp/Error.hpp"
 
-#define SERVER_IP "127.0.0.1"
-#define SERVER_PORT 8080
-#define BUFFER_SIZE 1024
 
 class DeliCamController {
 public:
+    DeliCamController() : valid(false) {
+        this->sock = socket(AF_INET, SOCK_DGRAM, 0);
+        if (this->sock < 0) {
+            perror("fail to create socket");
+            return;
+        }
+
+        memset(&(this->server_addr), 0, sizeof(this->server_addr));
+        this->server_addr.sin_family = AF_INET;
+        this->server_addr.sin_port = htons(this->server_port);
+        if (inet_pton(AF_INET, this->server_ip, &(this->server_addr.sin_addr)) <= 0) {
+            perror("fail to convert ip");
+            close(this->sock);
+            return;
+        }
+
+        valid = true;
+    }
+
+    ~DeliCamController() {
+        if (this->sock >= 0) {
+            close(this->sock);
+        }
+    }
+
+    bool isValid() const { return valid; }
+    void startCam(char *type);
+
     void sendImage();
     float calcCam3D(int u, int v);
     
 private:
     ob::Pipeline pipe;
+    int width = 640;
+    int height = 400;
     float fx = 475.328;
     float fy = 475.328;
     float cx = 315.204;
     float cy = 196.601;
+
+    const char* server_ip = "192.168.0.76";
+    int server_port = 8080;
+    bool valid;
+
+    int sock;
+    struct sockaddr_in server_addr;
+    bool start_cam;
+
 /*
-fx: 475.328
-fy: 475.328
-cx: 315.204
-cy: 196.601
 width: 640
 height: 400
 */
