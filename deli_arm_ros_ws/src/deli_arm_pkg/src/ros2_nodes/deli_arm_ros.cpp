@@ -3,12 +3,19 @@
 #include <thread>
 #include <cstring>
 #include <cstddef>
+#include <vector>
+#include <string>
+#include <unordered_map>
+#include <tuple>
 
 #include "rclcpp/rclcpp.hpp"
 #include "rclcpp_action/rclcpp_action.hpp"
 
 #include "deli_interfaces/action/dispatch_manipulation_task.hpp"
-#include "deli_arm_controller.h"
+#include "deli_interfaces/srv/product_detection.hpp"
+#include "deli_arm_pkg/deli_arm_controller.h"
+#include "deli_arm_pkg/deli_cam_controller.hpp"
+
 
 namespace deli_arm
 {
@@ -72,30 +79,43 @@ private:
     RCLCPP_INFO(this->get_logger(), "Executing goal");
     rclcpp::Rate loop_rate(1);
 
-    deli_arm_controller_.startCam();
+    deli_cam_controller_->startCam();
 
     const auto goal = goal_handle->get_goal();
 
-    auto request = std::make_shared<deli_interfaces::srv::ProductDetection>();
+    auto request = std::make_shared<deli_interfaces::srv::ProductDetection::Request>();
 
-    auto future = client_->async_send_request(request);
+    auto future = service_client_->async_send_request(request);
     if (rclcpp::spin_until_future_complete(this->get_node_base_interface(), future) ==
         rclcpp::FutureReturnCode::SUCCESS) {
         auto response = future.get();
         RCLCPP_INFO(this->get_logger(), "서비스 응답 수신!");
-    }
 
-    std::vector<std::string> items = goal->item_names;
-    std::vector<int32_t> quantities = goal->item_quantities;
 
-    std::unordered_map<std::string, int> product_counts;
-    for (size_t i = 0; i < items.size(); i++) {
-      product_counts[item[i]] = quantities[i];
-    }
+      std::vector<std::string> items = goal->item_names;
+      std::vector<int32_t> quantities = goal->item_quantities;
 
-    std::unordered_map<std::string, std::vector<tuple<int,int,int,int>> product_locations;
-    for (size_t i = 0; i < response->product_names.size(); i++) {
-      product_locations[response->product_names[i]].push_back({response->width[i], response->height[i], response->cx[i], response->cy[i]}); 
+      std::unordered_map<std::string, int> product_counts;
+      for (size_t i = 0; i < items.size(); i++) {
+        product_counts[items[i]] = quantities[i];
+      }
+
+      std::unordered_map<std::string, std::vector<std::tuple<int,int,int,int>>> product_locations;
+      for (size_t i = 0; i < response->product_names.size(); i++) {
+        product_locations[response->product_names[i]].push_back({response->width[i], response->height[i], response->cx[i], response->cy[i]}); 
+      }
+
+      for (const auto& [key, value] : product_locations) {
+        std::cout << "Product: " << key << "\n";
+
+        for (const auto& t : value) {
+          int width, height, cx, cy;
+          std::tie(width, height, cx, cy) = t;
+          std::cout << "Coordinates: (" << width << ", " << height << ", " << cx << ", " << cy << ")\n";
+        }
+      }
+      std::cout << std::endl;
+
     }
 
     auto feedback = std::make_shared<DispatchManipulationTask::Feedback>();
@@ -138,7 +158,7 @@ private:
 
 int main(int argc, char **argv) {
   rclcpp::init(argc, argv);
-  auto node = std::make_shared<deli_arm::DeliArmActionServer>();
+  auto node = std::make_shared<deli_arm::DeliArmRos>();
   rclcpp::spin(node);
   rclcpp::shutdown();
   return 0;

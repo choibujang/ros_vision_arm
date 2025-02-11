@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.8)
-project(deli_arm_ros_pkg)
+project(deli_arm_pkg)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -15,31 +15,44 @@ find_package(deli_interfaces REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(rclcpp_action REQUIRED)
 
-set(OrbbecSDK_DIR "../../../../OrbbecSDK")
+set(OrbbecSDK_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../../../OrbbecSDK")
 find_package(OrbbecSDK REQUIRED)
 
+# export LD_LIBRARY_PATH=/home/cook/my_ws/OrbbecSDK/lib/linux_x64:$LD_LIBRARY_PATH
+# sudo usermod -aG i2c $USER
 
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../../../deli_arm_controller/include)
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../../../deli_cam_controller/include)
+include_directories(include)
 
-add_executable(
-  deli_arm_ros src/deli_arm_ros.cpp
-  ../../../deli_arm_controller/src/deli_arm_controller.cpp
-  ../../../deli_arm_controller/src/I2CPeripheral.cpp
-  ../../../deli_arm_controller/src/pca9685_comm.cpp
-  ../../../deli_cam_controller/src/deli_cam_controller.cpp
-  )
+find_library(I2C_LIB NAMES i2c PATHS /usr/lib /usr/local/lib)
 
-target_link_libraries(deli_arm_ros i2c OrbbecSDK::OrbbecSDK)
+add_library(deli_controller
+    src/deli_arm_controller.cpp
+    src/I2CPeripheral.cpp
+    src/pca9685_comm.cpp
+    src/deli_cam_controller.cpp
+)
+
+target_include_directories(deli_controller PUBLIC include)
+
+target_link_libraries(deli_controller PUBLIC OrbbecSDK::OrbbecSDK ${I2C_LIB})
+
+add_executable(deli_arm_ros src/ros2_nodes/deli_arm_ros.cpp)
+
+target_link_libraries(deli_arm_ros deli_controller rclcpp::rclcpp)
+
+install(TARGETS deli_controller deli_arm_ros
+    EXPORT deli_controller_targets
+    LIBRARY DESTINATION lib
+    ARCHIVE DESTINATION lib
+    RUNTIME DESTINATION lib/${PROJECT_NAME}
+)
+
+install(DIRECTORY include/ DESTINATION include)
 
 ament_target_dependencies(deli_arm_ros
   "deli_interfaces"
   "rclcpp"
   "rclcpp_action")
-
-install(TARGETS
-  deli_arm_ros
-  DESTINATION lib/${PROJECT_NAME})
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)

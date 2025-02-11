@@ -1,4 +1,4 @@
-#include "../include/pca9685_comm.h"
+#include "deli_arm_pkg/pca9685_comm.h"
 
 namespace PiPCA9685 {
 

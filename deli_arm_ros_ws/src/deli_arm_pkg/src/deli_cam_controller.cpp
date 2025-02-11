@@ -1,4 +1,4 @@
-#include "../include/deli_cam_controller.hpp"
+#include "deli_arm_pkg/deli_cam_controller.hpp"
 
 void DeliCamController::startCam() {
     this->start_cam = true;

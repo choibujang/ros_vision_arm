@@ -1,4 +1,4 @@
-#include "../include/I2CPeripheral.h"
+#include "deli_arm_pkg/I2CPeripheral.h"
 
 namespace PiPCA9685 {
 
