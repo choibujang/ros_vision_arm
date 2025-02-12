@@ -37,6 +37,7 @@ add_library(deli_controller SHARED
 
 add_executable(deli_arm_ros src/ros2_nodes/deli_arm_ros.cpp)
 add_executable(test_service_client src/ros2_nodes/test_service_client.cpp)
+add_executable(move_test test/move_test.cpp)
 
 target_include_directories(deli_controller PUBLIC include)
 # target_include_directories(deli_controller PUBLIC ${ORBEC_SDK_INCLUDE_PATH})
@@ -46,6 +47,7 @@ target_link_libraries(deli_controller PUBLIC OrbbecSDK::OrbbecSDK)
 
 target_link_libraries(deli_arm_ros deli_controller rclcpp::rclcpp)
 target_link_libraries(test_service_client deli_controller rclcpp::rclcpp)
+target_link_libraries(move_test deli_controller)
 
 install(TARGETS deli_controller deli_arm_ros test_service_client
     EXPORT deli_controller_targets

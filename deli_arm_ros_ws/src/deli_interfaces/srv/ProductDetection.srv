@@ -1,3 +1,5 @@
+string[] item_names
+int32[] item_quantities
 ---
 string[] product_names
 int32[] width

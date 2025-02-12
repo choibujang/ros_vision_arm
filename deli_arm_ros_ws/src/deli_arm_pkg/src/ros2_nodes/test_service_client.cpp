@@ -37,7 +37,9 @@ public:
 
         RCLCPP_INFO(this->get_logger(), "Service is available!");
 
-        send_request();    
+        this->timer_ = this->create_wall_timer(
+            std::chrono::seconds(5),  // 5초마다 실행
+            std::bind(&TestServiceClient::send_request, this));    
     }
 
 private:
@@ -45,6 +47,7 @@ private:
     std::shared_ptr<DeliArmController> deli_arm_controller_;
     std::shared_ptr<DeliCamController> deli_cam_controller_;
     std::thread cam_thread_; 
+    rclcpp::TimerBase::SharedPtr timer_;
 
     void startCamThread() {
         cam_thread_ = std::thread([this]() {
@@ -62,6 +65,8 @@ private:
 
     void send_request() {
         auto request = std::make_shared<deli_interfaces::srv::ProductDetection::Request>();
+        request->item_names = {"peach", "apple"};
+        request->item_quantities = {1, 1};
 
         auto future = service_client_->async_send_request(request, 
             std::bind(&TestServiceClient::handle_service_response, this, std::placeholders::_1));
@@ -76,14 +81,6 @@ private:
             return;
         }
         RCLCPP_INFO(this->get_logger(), "Service response received!");
-
-        std::vector<std::string> items = {"peach"};
-        std::vector<int32_t> quantities = {1};
-
-        std::unordered_map<std::string, int> product_counts;
-        for (size_t i = 0; i < items.size(); i++) {
-            product_counts[items[i]] = quantities[i];
-        }
 
         std::unordered_map<std::string, std::vector<std::tuple<int, int, int, int>>> product_locations;
         for (size_t i = 0; i < response->product_names.size(); i++) {
