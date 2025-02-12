@@ -11,6 +11,7 @@
 #include <cstdlib>
 #include <chrono>
 #include <cerrno>
+#include <thread>
 
 
 #include "libobsensor/hpp/Pipeline.hpp"
@@ -27,6 +28,8 @@ public:
             return;
         }
 
+        std::cout << "socket created" << std::endl;
+
         memset(&(this->server_addr), 0, sizeof(this->server_addr));
         this->server_addr.sin_family = AF_INET;
         this->server_addr.sin_port = htons(this->server_port);
@@ -35,6 +38,8 @@ public:
             close(this->sock);
             return;
         }
+
+        std::cout << "converted ip" << std::endl;
 
         valid = true;
     }

@@ -1,12 +1,19 @@
 #include "deli_arm_pkg/deli_cam_controller.hpp"
 
 void DeliCamController::startCam() {
+    std::cout << "DeliCamController::startCam started" << std::endl;
     this->start_cam = true;
 
     std::shared_ptr<ob::Config> config = std::make_shared<ob::Config>();
     config->enableVideoStream(OB_STREAM_COLOR);
 
     this->pipe.start(config);
+
+    std::cout << "pipe started" << std::endl;
+
+    std::cout << "Waiting for camera to initialize..." << std::endl;
+    std::this_thread::sleep_for(std::chrono::seconds(2));  // 2초 대기
+    std::cout << "Camera initialized. Requesting frames..." << std::endl;
 
     uint32_t frame_id = 0; 
 
@@ -44,8 +51,6 @@ void DeliCamController::startCam() {
             if (sent_len < 0) {
                 std::cerr << "Sending failed! Error: " << strerror(errno) << std::endl;
                 break;
-            } else {
-            std::cout << "Frame sent: " << sent_len << " bytes" << std::endl;
             }
         }
         sendto(this->sock, frame_end, strlen(frame_end), 0,

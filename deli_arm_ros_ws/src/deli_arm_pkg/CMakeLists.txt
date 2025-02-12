@@ -15,32 +15,39 @@ find_package(deli_interfaces REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(rclcpp_action REQUIRED)
 
-set(OrbbecSDK_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../../../OrbbecSDK")
+set(OrbbecSDK_DIR "/home/hunter/ws/OrbbecSDK")
 find_package(OrbbecSDK REQUIRED)
 
-# export LD_LIBRARY_PATH=/home/cook/my_ws/OrbbecSDK/lib/linux_x64:$LD_LIBRARY_PATH
+# export LD_LIBRARY_PATH=/home/hunter/ws/OrbbecSDK/lib/linux_x64:$LD_LIBRARY_PATH
 # sudo usermod -aG i2c $USER
+
+# set(ORBEC_SDK_LIB_PATH "/home/hunter/ws/OrbbecSDK/lib/arm64")
+# set(ORBEC_SDK_INCLUDE_PATH "/home/hunter/ws/OrbbecSDK/include")
 
 include_directories(include)
 
 find_library(I2C_LIB NAMES i2c PATHS /usr/lib /usr/local/lib)
 
-add_library(deli_controller
+add_library(deli_controller SHARED
     src/deli_arm_controller.cpp
     src/I2CPeripheral.cpp
     src/pca9685_comm.cpp
     src/deli_cam_controller.cpp
 )
 
-target_include_directories(deli_controller PUBLIC include)
-
-target_link_libraries(deli_controller PUBLIC OrbbecSDK::OrbbecSDK ${I2C_LIB})
-
 add_executable(deli_arm_ros src/ros2_nodes/deli_arm_ros.cpp)
+add_executable(test_service_client src/ros2_nodes/test_service_client.cpp)
+
+target_include_directories(deli_controller PUBLIC include)
+# target_include_directories(deli_controller PUBLIC ${ORBEC_SDK_INCLUDE_PATH})
+
+target_link_libraries(deli_controller PUBLIC ${I2C_LIB})
+target_link_libraries(deli_controller PUBLIC OrbbecSDK::OrbbecSDK)
 
 target_link_libraries(deli_arm_ros deli_controller rclcpp::rclcpp)
+target_link_libraries(test_service_client deli_controller rclcpp::rclcpp)
 
-install(TARGETS deli_controller deli_arm_ros
+install(TARGETS deli_controller deli_arm_ros test_service_client
     EXPORT deli_controller_targets
     LIBRARY DESTINATION lib
     ARCHIVE DESTINATION lib
@@ -53,6 +60,11 @@ ament_target_dependencies(deli_arm_ros
   "deli_interfaces"
   "rclcpp"
   "rclcpp_action")
+
+ament_target_dependencies(test_service_client
+  "deli_interfaces"
+  "rclcpp"
+)
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
