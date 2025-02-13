@@ -25,47 +25,39 @@ std::vector<double> DeliArmController::calcIK(std::vector<double> pick_target_po
         ik_result[0] = convertJoint(0, theta0);
     }
 
-    double py = -(links[0] - target_z);
     double px = sqrt(pow(target_x, 2) + pow(target_y, 2));
+    double py = target_z - links[0];
 
     std::cout << "px: " << px << std::endl;
     std::cout << "py: " << py << std::endl;
-
-    double r = sqrt(pow(px, 2) + pow(py, 2));
-    double theta2 = std::acos((pow(r, 2) - pow(links[1], 2) - pow(links[2], 2)) / (2 * links[1] * links[2]));
-    double theta1 = std::atan2(py / px) - std::atan2((links[2] * std::sin(theta2)) / (links[1] + links[2] * std::cos(theta2)));
-
-    theta1 = theta1 * (180.0 / M_PI);
-    theta2 = theta2 * (180.0 / M_PI);
-    std::cout << "theta1: " << theta1 << std::endl;
-    std::cout << "theta2: " << theta2 << std::endl;
     
 
-    // std::cout << "(link1 + link2) ^ 2: " << pow((links[1] + links[2]), 2) << std::endl;
-    // std::cout << "(px^2) + (py^2): " << (pow(px, 2) + pow(py, 2)) << std::endl;
-    // double numerator = pow((links[1] + links[2]), 2) - (pow(px, 2) + pow(py, 2));
-    // std::cout << "numerator: " << numerator << std::endl;
-    // double denominator = (pow(px, 2) + pow(py, 2)) - (pow(links[1] - links[2], 2));
-    // std::cout << "denominator: " << denominator << std::endl;
+    std::cout << "(link1 + link2) ^ 2: " << pow((links[1] + links[2]), 2) << std::endl;
+    std::cout << "(px^2) + (py^2): " << (pow(px, 2) + pow(py, 2)) << std::endl;
+    double numerator = pow((links[1] + links[2]), 2) - (pow(px, 2) + pow(py, 2));
+    std::cout << "numerator: " << numerator << std::endl;
+    double denominator = (pow(px, 2) + pow(py, 2)) - (pow(links[1] - links[2], 2));
+    std::cout << "denominator: " << denominator << std::endl;
 
-    // double theta2_positive = 2 * atan2(sqrt(numerator), sqrt(denominator));
-    // double theta2_negative = -2 * atan2(sqrt(numerator), sqrt(denominator));
-    // std::cout << "theta2_positive: " << theta2_positive << std::endl;
-    // std::cout << "theta2_negative: " << theta2_negative << std::endl;
+    double theta2_positive = 2 * atan2(sqrt(numerator), sqrt(denominator));
+    double theta2_negative = -2 * atan2(sqrt(numerator), sqrt(denominator));
+    std::cout << "theta2_positive: " << theta2_positive << std::endl;
+    std::cout << "theta2_negative: " << theta2_negative << std::endl;
 
-    // double term1 = atan2(py, px);
-    // std::cout << "term1: " << term1 << std::endl;
-    // double term2 = atan2(links[2] * sin(theta2_negative), links[1] + links[2] * cos(theta2_negative));
-    // std::cout << "term2: " << term2 << std::endl;
+    double term1 = atan2(py, px);
+    std::cout << "term1: " << term1 << std::endl;
+    double term2 = atan2(links[2] * sin(theta2_negative), links[1] + links[2] * cos(theta2_negative));
+    std::cout << "term2: " << term2 << std::endl;
 
-    // double theta1 = term1 - term2;
-    // std::cout << "theta1: " << theta1 << std::endl;
+    double theta1 = term1 - term2;
+    std::cout << "theta1: " << theta1 << std::endl;
 
-    // theta1 = theta1 * (180.0 / M_PI);
-    // theta2_negative = theta2_negative * (180.0 / M_PI);
+    theta1 = theta1 * (180.0 / M_PI);
+    theta2_negative = theta2_negative * (180.0 / M_PI);
+
     ik_result[1] = convertJoint(1, theta1);
-    ik_result[2] = convertJoint(2, theta2 / 2);
-    ik_result[3] = convertJoint(3, theta2 / 2 + 10);
+    ik_result[2] = convertJoint(2, theta2_negative / 2);
+    ik_result[3] = convertJoint(3, theta2_negative / 2 + 10);
 
     return ik_result;
 }
