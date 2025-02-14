@@ -27,6 +27,8 @@ public:
 
         startCamThread();
 
+        deli_arm_controller_->move321JointsToCameraPos();
+
         std::this_thread::sleep_for(std::chrono::seconds(10));
 
         this->service_client_ = this->create_client<deli_interfaces::srv::ProductDetection>("detect_products");
@@ -57,6 +59,7 @@ private:
     }
 
     void stopCamThread() {
+        deli_cam_controller_->start_cam = false;
         if (cam_thread_.joinable()) {
             cam_thread_.join(); 
         }

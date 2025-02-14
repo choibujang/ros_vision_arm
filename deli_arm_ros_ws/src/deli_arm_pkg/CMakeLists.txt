@@ -41,6 +41,7 @@ add_executable(angle_test test/angle_test.cpp)
 add_executable(move_test test/move_test.cpp)
 add_executable(pp_test test/pp_test.cpp)
 add_executable(camera_test test/camera_test.cpp)
+add_executable(depth_test test/depth_test.cpp)
 
 target_include_directories(deli_controller PUBLIC include)
 # target_include_directories(deli_controller PUBLIC ${ORBEC_SDK_INCLUDE_PATH})
@@ -54,6 +55,7 @@ target_link_libraries(angle_test deli_controller)
 target_link_libraries(move_test deli_controller)
 target_link_libraries(pp_test deli_controller)
 target_link_libraries(camera_test deli_controller)
+target_link_libraries(depth_test deli_controller)
 
 install(TARGETS deli_controller deli_arm_ros test_service_client
     EXPORT deli_controller_targets

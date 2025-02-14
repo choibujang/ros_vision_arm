@@ -1,7 +1,7 @@
 #include "deli_arm_pkg/deli_cam_controller.hpp"
 
 void DeliCamController::startCam() {
-    std::cout << "DeliCamController::startCam started" << std::endl;
+    std::cout << "DeliCamController::startColorStream started" << std::endl;
     this->start_cam = true;
 
     std::shared_ptr<ob::Config> config = std::make_shared<ob::Config>();
@@ -56,7 +56,54 @@ void DeliCamController::startCam() {
         sendto(this->sock, frame_end, strlen(frame_end), 0,
                (struct sockaddr *)&(this->server_addr), sizeof(this->server_addr));
         frame_id++;
-    }     
+    }    
+    this->pipe.stop(); 
+}
+
+float DeliCamController::getDepthValue(int center_x, int center_y) {
+    std::cout << "DeliCamController::getDepthValue started" << std::endl;
+
+    std::shared_ptr<ob::Config> config = std::make_shared<ob::Config>();
+    config->enableVideoStream(OB_STREAM_DEPTH);
+
+    this->pipe.start(config);
+
+    std::cout << "pipe started" << std::endl;
+
+    std::cout << "Waiting for camera to initialize..." << std::endl;
+    std::this_thread::sleep_for(std::chrono::seconds(2));  // 2초 대기
+    std::cout << "Camera initialized. Requesting frames..." << std::endl;
+
+    while(true) {
+        // Wait for up to 100ms for a frameset in blocking mode.
+        auto frameSet = pipe.waitForFrames(100);
+        if(frameSet == nullptr) {
+	    std::cout << "frameSet nullptr" << std::endl;
+            continue;
+        }
+
+        auto depthFrame = frameSet->depthFrame();
+
+        // for Y16 format depth frame, print the distance of the center pixel every 30 frames
+        if(depthFrame->index() % 30 == 0 && depthFrame->format() == OB_FORMAT_Y16) {
+            uint32_t  width  = depthFrame->width();
+            uint32_t  height = depthFrame->height();
+            float     scale  = depthFrame->getValueScale();
+            uint16_t *data   = (uint16_t *)depthFrame->data();
+
+            // pixel value multiplied by scale is the actual distance value in millimeters
+            float centerDistance = data[width * center_y + center_x] * scale;
+	    std::cout << "centerDistance: " << centerDistance << std::endl;
+
+            // attention: if the distance is 0, it means that the depth camera cannot detect the object（may be out of detection range）
+            if (centerDistance) {
+                this->pipe.stop();
+                return centerDistance;
+            }
+        }
+    }
+
+
 }
 
 // std::vector<float> DeliCamController::calcCamCoordinatePose(int u, int v, int z) {

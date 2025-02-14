@@ -52,9 +52,12 @@ public:
 
     bool isValid() const { return valid; }
     void startCam();
+    float getDepthValue(int center_x, int center_y);
 
     void sendImage();
     float calcCam3D(int u, int v);
+
+    bool start_cam;
     
 private:
     ob::Pipeline pipe;
@@ -75,7 +78,7 @@ private:
 
     int sock;
     struct sockaddr_in server_addr;
-    bool start_cam;
+
 
 /*
 width: 640
