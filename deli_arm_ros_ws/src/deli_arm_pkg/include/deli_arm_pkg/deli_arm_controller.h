@@ -18,11 +18,7 @@ public:
         pca.set_pwm_freq(50);
 
         int min_pulse = 102; 
-        int max_pulse = 512; 
-
-        int duration = 2000;
-        int interval = 20;
-        int num_steps = duration / interval; 
+        int max_pulse = 512;
 
         int target_pulse;
 
@@ -57,35 +53,65 @@ public:
         double converted_angle;
         if (joint_num == 0) {
             converted_angle = ik_angle + joints_map[joint_num];
+            if (converted_angle < 10.0 || converted_angle > 170.0) {
+                std::cout << "invalid angle " << joint_num << std::endl;
+                return std::nan("");
+            }
         } else if (joint_num == 1) {
             converted_angle = -1 * (ik_angle - joints_map[joint_num]);
+            if (converted_angle < 10.0 || converted_angle > 170.0) {
+                std::cout << "invalid angle " << joint_num << std::endl;
+                return std::nan("");
+            }
         } else if (joint_num == 2) {
             converted_angle = ik_angle + joints_map[joint_num];
+            if (converted_angle < 10.0 || converted_angle > 170.0) {
+                std::cout << "invalid angle " << joint_num << std::endl;
+                return std::nan("");
+            }
         } else if (joint_num == 3) {
             converted_angle = -1 * (ik_angle - joints_map[joint_num]);
+            if (converted_angle < 10.0 || converted_angle > 170.0) {
+                std::cout << "invalid angle " << joint_num << std::endl;
+                return std::nan("");
+            }
         } else {
             std::cout << "invalid joint_num" << std::endl;
             return std::nan("");
         }
 
-        if (converted_angle < 10.0 || converted_angle > 170.0) {
-            std::cout << "invalid angle" << std::endl;
-            return std::nan("");
-        } else {
-            return converted_angle;
-        }
+        return converted_angle;
     }
 
     std::vector<double> calcIK(std::vector<double> pick_target_pos);
     void writeRasp(int joint_num, double angle);
     void move321JointsToNeatPos();
-    void openGripper() { writeRasp(5, open_gripper); }
-    void closeGripper() { writeRasp(5, close_gripper); }
-    void moveBaseLink(double angle) { writeRasp(0, angle); }
+    void openGripper(int value=90) {
+        std::cout << "!openGripper entered!" << std::endl;
+        writeRasp(5, value);
+        for (int i = 0; i < 6; i++) {
+            std::cout << "joint " << i << " pwm: " << pca.get_pwm(i) << std::endl;
+        }
+    }
+    void closeGripper(int value=105) { 
+        std::cout << "!closeGripper entered!" << std::endl;
+        writeRasp(5, value); 
+        for (int i = 0; i < 6; i++) {
+            std::cout << "joint " << i << " pwm: " << pca.get_pwm(i) << std::endl;
+        }
+    }
+    void moveBaseLink(double angle) {
+        std::cout << "!moveBaseLink entered!" << std::endl;
+        writeRasp(0, angle);
+        for (int i = 0; i < 6; i++) {
+            std::cout << "joint " << i << " pwm: " << pca.get_pwm(i) << std::endl;
+        }
+    }
     void move321Joints(std::vector<double> goal_joints);
+    void move321JointsToCameraPos();
 
 private:
-    std::vector<double> links = {100, 104, 293}; // mm, 손목1 103 110
+    std::vector<double> links = {85, 104, 293}; // mm, 손목1 103 110
     // 0번 조인트: 10 앞에서봤을때 왼쪽 90 중간 170 오른쪽
     // 1번 조인트: 170 앞 90 중간 10 뒤
     // 2번 조인트: 10 앞 90 중간 170 뒤
@@ -106,9 +132,15 @@ private:
         {3, 160}
     };
 
+    std::map<int, double> camera_321joints = {
+        {1, 60},
+        {2, 15},
+        {3, 165}
+    };
+
     double fixed_joint4 = 120.0;
     double open_gripper = 90.0;
-    double close_gripper = 106.0;
+    double close_gripper = 105.0;
 
     PiPCA9685::PCA9685 pca;
 };

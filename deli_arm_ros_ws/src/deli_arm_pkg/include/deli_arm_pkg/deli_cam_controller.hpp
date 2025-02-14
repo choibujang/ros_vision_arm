@@ -65,7 +65,7 @@ private:
     float cx = 315.204;
     float cy = 196.601;
 
-    const char* server_ip = "192.168.0.76";
+    const char* server_ip = "192.168.191.174";
     int server_port = 8080;
     bool valid;
     const int header_size = 8;

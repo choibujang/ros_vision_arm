@@ -8,9 +8,8 @@ std::vector<double> DeliArmController::calcIK(std::vector<double> pick_target_po
         std::nan(""),
         std::nan(""),
         std::nan(""),
-        std::nan(""),
-        fixed_joint4,
-        close_gripper};
+        std::nan("")
+    };
     std::cout << "(target_x, target_y, target_z) = " << target_x << ", " << target_y << ", " << target_z << std::endl;
     if (target_y == 0.0) {
         if (target_x <= 0.0) {
@@ -56,48 +55,86 @@ std::vector<double> DeliArmController::calcIK(std::vector<double> pick_target_po
     theta2_negative = theta2_negative * (180.0 / M_PI);
 
     ik_result[1] = convertJoint(1, theta1);
-    ik_result[2] = convertJoint(2, theta2_negative / 2);
-    ik_result[3] = convertJoint(3, theta2_negative / 2 + 10);
+    ik_result[2] = convertJoint(2, (theta2_negative / 3) * 2);
+    ik_result[3] = convertJoint(3, theta2_negative / 3);
 
     return ik_result;
 }
+
+// void DeliArmController::writeRasp(int joint_num, double angle) {
+//     int min_pulse = 102; 
+//     int max_pulse = 512; 
+
+//     int duration = 2000;
+//     int interval = 20;
+//     int num_steps = duration / interval; 
+
+//     int current_pulse = pca.get_pwm(joint_num);
+//     int target_pulse = min_pulse + (angle / 180.0) * (max_pulse - min_pulse);
+
+//     for (int step = 0; step <= num_steps; step++) {
+//         float t = (float)step / num_steps;
+//         float ease_ratio = t * t * (3 - 2 * t);
+//         int smooth_pulse = current_pulse + (target_pulse - current_pulse) * ease_ratio;
+//         pca.set_pwm(joint_num, 0, smooth_pulse);
+//         std::this_thread::sleep_for(std::chrono::milliseconds(interval));  // 1000ms (1초) 대기
+//     }
+    
+// }
 
 void DeliArmController::writeRasp(int joint_num, double angle) {
     int min_pulse = 102; 
     int max_pulse = 512; 
 
-    int duration = 2000;
+    int base_duration_per_degree = 50;
     int interval = 20;
-    int num_steps = duration / interval; 
 
     int current_pulse = pca.get_pwm(joint_num);
     int target_pulse = min_pulse + (angle / 180.0) * (max_pulse - min_pulse);
+    
+    int angle_delta = abs((target_pulse - current_pulse) * 180.0 / (max_pulse - min_pulse));
+    int duration = angle_delta * base_duration_per_degree; 
+    int num_steps = std::max(1, duration / interval); 
 
     for (int step = 0; step <= num_steps; step++) {
         float t = (float)step / num_steps;
         float ease_ratio = t * t * (3 - 2 * t);
         int smooth_pulse = current_pulse + (target_pulse - current_pulse) * ease_ratio;
         pca.set_pwm(joint_num, 0, smooth_pulse);
-        std::this_thread::sleep_for(std::chrono::milliseconds(interval));  // 1000ms (1초) 대기
+        std::this_thread::sleep_for(std::chrono::milliseconds(interval));  
     }
-    
 }
 
+
 void DeliArmController::move321JointsToNeatPos() {
+    std::cout << "!move321JointsToNeatPos entered!" << std::endl;
     for (const auto& pair : neat_321joints) {
         writeRasp(pair.first, pair.second);
+    }
+    for (int i = 0; i < 6; i++) {
+        std::cout << "joint " << i << " pwm: " << pca.get_pwm(i) << std::endl;
+    }
+}
+
+void DeliArmController::move321JointsToCameraPos() {
+    std::cout << "!move321JointsToCameraPos entered!" << std::endl;
+    for (const auto& pair : camera_321joints) {
+        writeRasp(pair.first, pair.second);
+    }
+    for (int i = 0; i < 6; i++) {
+        std::cout << "joint " << i << " pwm: " << pca.get_pwm(i) << std::endl;
     }
 }
 
 
 void DeliArmController::move321Joints(std::vector<double> goal_joints) {
-    auto start = std::chrono::high_resolution_clock::now();
-
-    for (int i = goal_joints.size()-1; i > 0; i--) 
+    std::cout << "!move321Joints entered!" << std::endl;
+    for (int i = goal_joints.size()-1; i > 0; i--) {
+        std::cout << i << ": " << goal_joints[i] << ", ";
         writeRasp(i, goal_joints[i]);
-        
-    auto end = std::chrono::high_resolution_clock::now();
-    std::chrono::duration<double, std::milli> elapsed = end - start;
-    std::cout << "writeRasp time: " << elapsed.count() << std::endl;
-
+    }
+    std::cout << std::endl;
+    for (int i = 0; i < 6; i++) {
+        std::cout << "joint " << i << " pwm: " << pca.get_pwm(i) << std::endl;
+    }
 }
