@@ -7,7 +7,7 @@ int main() {
 
     deli_arm.move321JointsToCameraPos();
 
-    float depth = deli_cam.getDepthValue(235, 382);
+    float depth = deli_cam.getDepthValue(204, 330);
 
     std::cout << "depth: " << depth << std::endl;
     
