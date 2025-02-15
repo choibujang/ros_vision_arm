@@ -2,11 +2,8 @@
 #include "deli_arm_pkg/deli_cam_controller.hpp"
 
 int main() {
-    DeliArmController deli_arm;
     DeliCamController deli_cam;
     std::vector<float> camera_pose(3);
-
-    deli_arm.move321JointsToCameraPos();
 
     int center_x = 345;
     int center_y = 323;
