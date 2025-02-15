@@ -119,7 +119,8 @@ cv::Mat DeliCamController::convertCoorPixToCam(int center_x, int center_y) {
     cv::Mat P_cam = (cv::Mat_<float>(3,1) << cam_x, cam_y, cam_z);
 
     std::cout << "cam x, y, z: " << cam_x << ", " << cam_y << ", " << cam_z << std::endl;
-
+    // X: -57.276, Y: 81.1239, Z: 254
+    // base frame xyz: 220, 60, 10
     return P_cam;
 
 }
