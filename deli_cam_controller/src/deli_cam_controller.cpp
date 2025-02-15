@@ -66,32 +66,17 @@ void DeliCamController::startCam() {
 cv::Mat DeliCamController::convertCoorPixToCam(int center_x, int center_y) {
     std::cout << "DeliCamController::getDepthValue started" << std::endl;
 
-    float rgb_x = (center_x - rgb_cx) / rgb_fx;
-    float rgb_y = (center_y - rgb_cy) / rgb_fy;
-    float rgb_z = 1.0;
-
-    std::cout << "rgb x, y, z: " << rgb_x << ", " << rgb_y << ", " << rgb_z << std::endl;
-
-    cv::Mat P_rgb = (cv::Mat_<float>(3,1) << rgb_x, rgb_y, rgb_z);
-
-    cv::Mat P_depth = rgb_to_depth_rot * P_rgb + rgb_to_depth_trans;
-
-    float depth_x = P_depth.at<float>(0,0);
-    float depth_y = P_depth.at<float>(1,0);
-    float depth_z = P_depth.at<float>(2,0);
+    float v_d = center_y * (400.0/480.0);
+    float u_d = ((center_x - rgb_cx) * depth_fx / rgb_fx) + depth_cx;
+    v_d = ((v_d - rgb_cy) * depth_fy / rgb_fy) + depth_cy;
     
-    std::cout << "depth x, y, z: " << depth_x << ", " << depth_y << ", " << depth_z << std::endl;
+    int center_depth;
 
-    int depth_pix_x = static_cast<int>((depth_x * depth_fx) / depth_z + depth_cx);
-    int depth_pix_y = static_cast<int>((depth_y * depth_fy) / depth_z + depth_cy);
-
-    std::cout << "depth pix x, y: " << depth_pix_x << ", " << depth_pix_y << std::endl;
-    
     std::shared_ptr<ob::Config> config = std::make_shared<ob::Config>();
-    config->enableVideoStream(OB_STREAM_DEPTH, 640, 480, 30, OB_FORMAT_Y16);
+    config->enableVideoStream(OB_STREAM_DEPTH);
 
     this->pipe.start(config);
-
+ 
     std::cout << "pipe started" << std::endl;
 
     std::cout << "Waiting for camera to initialize..." << std::endl;
@@ -116,22 +101,24 @@ cv::Mat DeliCamController::convertCoorPixToCam(int center_x, int center_y) {
             uint16_t *data   = (uint16_t *)depthFrame->data();
 
             // pixel value multiplied by scale is the actual distance value in millimeters
-            depth_z = data[width * int(depth_pix_y) + int(depth_pix_x)] * scale;
-	        std::cout << "centerDistance: " << depth_z << std::endl;
+            center_depth = data[width * static_cast<int>(v_d) + static_cast<int>(u_d)] * scale;
+	        std::cout << "centerDistance: " << center_depth << std::endl;
 
             // attention: if the distance is 0, it means that the depth camera cannot detect the object（may be out of detection range）
-            if (depth_z) {
+            if (center_depth) {
                 this->pipe.stop();
                 break;
             }
         }
     }
 
-    float cam_x = (depth_pix_x - depth_cx) * depth_z / depth_fx;
-    float cam_y = (depth_pix_y - depth_cy) * depth_z / depth_fy;
-    float cam_z = depth_z;
+    float cam_x = (center_x - rgb_cx) * center_depth / rgb_fx;
+    float cam_y = (center_y - rgb_cy) * center_depth / rgb_fy;
+    float cam_z = static_cast<float>(center_depth);
 
     cv::Mat P_cam = (cv::Mat_<float>(3,1) << cam_x, cam_y, cam_z);
+
+    std::cout << "cam x, y, z: " << cam_x << ", " << cam_y << ", " << cam_z << std::endl;
 
     return P_cam;
 
