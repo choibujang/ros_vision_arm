@@ -25,6 +25,9 @@ void DeliCamController::startCam() {
         }
 
         auto colorFrame = frameSet->colorFrame();
+        
+        std::cout << colorFrame->width() << std::endl;
+        std::cout << colorFrame->height() << std::endl;
 
         std::vector<uint8_t> mjpeg_data((uint8_t*)colorFrame->data(), (uint8_t*)colorFrame->data() + colorFrame->dataSize());
 
@@ -60,11 +63,32 @@ void DeliCamController::startCam() {
     this->pipe.stop(); 
 }
 
-float DeliCamController::getDepthValue(int center_x, int center_y) {
+cv::Mat DeliCamController::convertCoorPixToCam(int center_x, int center_y) {
     std::cout << "DeliCamController::getDepthValue started" << std::endl;
 
+    float rgb_x = (center_x - rgb_cx) / rgb_fx;
+    float rgb_y = (center_y - rgb_cy) / rgb_fy;
+    float rgb_z = 1.0;
+
+    std::cout << "rgb x, y, z: " << rgb_x << ", " << rgb_y << ", " << rgb_z << std::endl;
+
+    cv::Mat P_rgb = (cv::Mat_<float>(3,1) << rgb_x, rgb_y, rgb_z);
+
+    cv::Mat P_depth = rgb_to_depth_rot * P_rgb + rgb_to_depth_trans;
+
+    float depth_x = P_depth.at<float>(0,0);
+    float depth_y = P_depth.at<float>(1,0);
+    float depth_z = P_depth.at<float>(2,0);
+    
+    std::cout << "depth x, y, z: " << depth_x << ", " << depth_y << ", " << depth_z << std::endl;
+
+    int depth_pix_x = static_cast<int>((depth_x * depth_fx) / depth_z + depth_cx);
+    int depth_pix_y = static_cast<int>((depth_y * depth_fy) / depth_z + depth_cy);
+
+    std::cout << "depth pix x, y: " << depth_pix_x << ", " << depth_pix_y << std::endl;
+    
     std::shared_ptr<ob::Config> config = std::make_shared<ob::Config>();
-    config->enableVideoStream(OB_STREAM_DEPTH);
+    config->enableVideoStream(OB_STREAM_DEPTH, 640, 480, 30, OB_FORMAT_Y16);
 
     this->pipe.start(config);
 
@@ -92,34 +116,80 @@ float DeliCamController::getDepthValue(int center_x, int center_y) {
             uint16_t *data   = (uint16_t *)depthFrame->data();
 
             // pixel value multiplied by scale is the actual distance value in millimeters
-            float centerDistance = data[width * center_y + center_x] * scale;
-            std::cout << "width, height: " << width << ", " << height << std::endl;
-	        std::cout << "centerDistance: " << centerDistance << std::endl;
+            depth_z = data[width * int(depth_pix_y) + int(depth_pix_x)] * scale;
+	        std::cout << "centerDistance: " << depth_z << std::endl;
 
             // attention: if the distance is 0, it means that the depth camera cannot detect the object（may be out of detection range）
-            if (centerDistance) {
+            if (depth_z) {
                 this->pipe.stop();
-                return centerDistance;
+                break;
             }
         }
     }
 
+    float cam_x = (depth_pix_x - depth_cx) * depth_z / depth_fx;
+    float cam_y = (depth_pix_y - depth_cy) * depth_z / depth_fy;
+    float cam_z = depth_z;
+
+    cv::Mat P_cam = (cv::Mat_<float>(3,1) << cam_x, cam_y, cam_z);
+
+    return P_cam;
 
 }
 
-std::vector<float> DeliCamController::convertCoor(int px, int py) {
-    std::vector<float> camera_coor(3);
+void DeliCamController::getCamParam() {
+    auto device = pipe.getDevice();
+    // Get the depth sensor
+    auto depthSensor = device->getSensor(OB_SENSOR_DEPTH);
 
-    float depth = getDepthValue(px, py);
+    // Get depth camera intrinsic parameters
+    auto depthStreamProfile = depthSensor->getStreamProfileList()->getVideoStreamProfile(0);
+    auto intrinsics = depthStreamProfile->getIntrinsic();
 
-    float xc = px - cx;
-    float yc = py - cy;
+    std::cout << "Depth Camera Intrinsic Parameters:\n";
+    std::cout << "fx: " << intrinsics.fx << ", fy: " << intrinsics.fy << "\n";
+    std::cout << "cx: " << intrinsics.cx << ", cy: " << intrinsics.cy << "\n";
+    std::cout << "width: " << intrinsics.width << ", height: " << intrinsics.height << "\n";
 
-    camera_coor[0] = (xc * depth) / fx;
-    camera_coor[1] = (yc * depth) / fy;
-    camera_coor[2] = depth;
+    auto rgbSensor = device->getSensor(OB_SENSOR_COLOR);
+    auto rgbStreamProfile = rgbSensor->getStreamProfileList()->getVideoStreamProfile(0);
+    auto rgbIntrinsics = rgbStreamProfile->getIntrinsic();
 
-    return camera_coor;
+    std::cout << "RGB Camera Intrinsic Parameters:\n";
+    std::cout << "fx: " << rgbIntrinsics.fx << ", fy: " << rgbIntrinsics.fy << "\n";
+    std::cout << "cx: " << rgbIntrinsics.cx << ", cy: " << rgbIntrinsics.cy << "\n";
+    std::cout << "width: " << rgbIntrinsics.width << ", height: " << rgbIntrinsics.height << "\n";
+
+    auto depth_to_rgb_extrinsics = depthStreamProfile->getExtrinsicTo(rgbStreamProfile);
+
+    std::cout << "Extrinsic Parameters (Depth to RGB):" << std::endl;
+    std::cout << "Rotation Matrix:" << std::endl;
+    for (int i = 0; i < 3; i++) {
+        std::cout << depth_to_rgb_extrinsics.rot[i * 3] << " "
+                    << depth_to_rgb_extrinsics.rot[i * 3 + 1] << " "
+                    << depth_to_rgb_extrinsics.rot[i * 3 + 2] << std::endl;
+    }
+
+    std::cout << "Translation Vector: "
+                << depth_to_rgb_extrinsics.trans[0] << " "
+                << depth_to_rgb_extrinsics.trans[1] << " "
+                << depth_to_rgb_extrinsics.trans[2] << std::endl;
+
+    auto rgb_to_depth_extrinsics = rgbStreamProfile->getExtrinsicTo(depthStreamProfile);
+
+    std::cout << "Extrinsic Parameters (RGB to Depth):" << std::endl;
+    std::cout << "Rotation Matrix:" << std::endl;
+    for (int i = 0; i < 3; i++) {
+        std::cout << rgb_to_depth_extrinsics.rot[i * 3] << " "
+                    << rgb_to_depth_extrinsics.rot[i * 3 + 1] << " "
+                    << rgb_to_depth_extrinsics.rot[i * 3 + 2] << std::endl;
+    }
+
+    std::cout << "Translation Vector: "
+                << rgb_to_depth_extrinsics.trans[0] << " "
+                << rgb_to_depth_extrinsics.trans[1] << " "
+                << rgb_to_depth_extrinsics.trans[2] << std::endl;
+    
 }
 
 // std::vector<float> DeliCamController::calcCamCoordinatePose(int u, int v, int z) {

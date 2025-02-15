@@ -12,11 +12,15 @@
 #include <chrono>
 #include <cerrno>
 #include <thread>
+#include <opencv2/opencv.hpp>
 
 
 #include "libobsensor/hpp/Pipeline.hpp"
 #include "libobsensor/hpp/Error.hpp"
 #include "libobsensor/ObSensor.hpp"
+#include "libobsensor/hpp/Sensor.hpp"
+#include "libobsensor/hpp/Device.hpp"
+#include "libobsensor/h/ObTypes.h"
 
 
 class DeliCamController {
@@ -52,21 +56,12 @@ public:
 
     bool isValid() const { return valid; }
     void startCam();
-    float getDepthValue(int center_x, int center_y);
-
-    void sendImage();
-    std::vector<float> convertCoor(int px, int py);
-
-    bool start_cam;
-    float fx = 475.328;
-    float fy = 475.328;
-    float cx = 315.204;
-    float cy = 196.601;
+    cv::Mat convertCoorPixToCam(int center_x, int center_y);
+    void getCamParam();
     
 private:
     ob::Pipeline pipe;
-    int width = 640;
-    int height = 400;
+
 
     const char* server_ip = "192.168.0.76";
     int server_port = 8080;
@@ -78,6 +73,40 @@ private:
 
     int sock;
     struct sockaddr_in server_addr;
+
+    bool start_cam;
+    float depth_fx = 475.328;
+    float depth_fy = 475.328;
+    float depth_cx = 315.204;
+    float depth_cy = 196.601;
+    float depth_width = 640;
+    float depth_height = 400;
+
+    float rgb_fx = 453.183;
+    float rgb_fy = 453.183;
+    float rgb_cx = 333.191;
+    float rgb_cy = 241.26;
+    float rgb_width = 640;
+    float rgb_height = 480;
+
+    // RGB to Depth
+    cv::Mat rgb_to_depth_rot = (cv::Mat_<float>(3, 3) << 
+        0.999983, 0.0050659, -0.0028331,
+        -0.0050672, 0.999987,-0.00045272,
+        0.00283077, 0.000467068, 0.999996
+    );
+
+    // Translation Vector (3x1)
+    cv::Mat rgb_to_depth_trans = (cv::Mat_<float>(3, 1) << 9.98615, -0.0882425, 0.675267);
+
+    cv::Mat depth_to_rgb_rot = (cv::Mat_<float>(3, 3) <<
+        0.999983, -0.0050672, 0.00283077,
+        0.0050659, 0.999987, 0.000467068,
+        -0.0028331, -0.00045272, 0.999996
+    );
+
+    cv::Mat depth_to_rgb_trans = (cv::Mat_<float>(3, 1) << -9.98834, 0.0373371, -0.647012);
+
 
 
 /*

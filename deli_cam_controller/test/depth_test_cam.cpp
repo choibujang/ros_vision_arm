@@ -4,12 +4,14 @@ int main() {
     DeliCamController deli_cam;
     std::vector<float> camera_pose(3);
 
-    int center_x = 345;
-    int center_y = 323;
+    // [{'product_name': 'peach', 'width': 63, 'height': 53, 'cx': 300, 'cy': 255}]
 
-    camera_pose = deli_cam.convertCoor(center_x, center_y);
+    int center_x = 231;
+    int center_y = 386;
 
-    std::cout << "X: " << camera_pose[0] << ", " << "Y: " << camera_pose[1] << ", " << "Z: " << camera_pose[2] << std::endl;
+    auto product_pose = deli_cam.convertCoorPixToCam(center_x, center_y);
+
+    std::cout << "X: " << product_pose.at<float>(0,0) << ", " << "Y: " << product_pose.at<float>(1,0) << ", " << "Z: " << product_pose.at<float>(2,0) << std::endl;
     // X: -57.0843, Y: 68.4777, Z: 244
     // from base frame, about X: 22, Y: 6.5, Z: 1.5 cm
     
