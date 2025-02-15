@@ -1,4 +1,4 @@
-#include "deli_arm_pkg/deli_cam_controller.hpp"
+#include "deli_cam_controller.hpp"
 
 void DeliCamController::startCam() {
     std::cout << "DeliCamController::startColorStream started" << std::endl;

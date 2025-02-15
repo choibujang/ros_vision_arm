@@ -1,13 +1,9 @@
-#include "deli_arm_pkg/deli_arm_controller.h"
-#include "deli_arm_pkg/deli_cam_controller.hpp"
+#include "deli_arm_controller/deli_arm_controller.h"
 
 int main() {
     DeliArmController deli_arm;
-    DeliCamController deli_cam;
 
     deli_arm.move321JointsToCameraPos();
-
-    std::thread cam_thread(&DeliCamController::startCam, &deli_cam);
 
     // while(true) {
     //     std::this_thread::sleep_for(std::chrono::seconds(3));
@@ -39,9 +35,6 @@ int main() {
     //     }
     // }
 
-    if (cam_thread.joinable()) {
-        cam_thread.join();
-    }
 
     return 0;
 }

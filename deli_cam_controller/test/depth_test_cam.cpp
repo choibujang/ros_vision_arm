@@ -1,5 +1,4 @@
-#include "deli_arm_pkg/deli_arm_controller.h"
-#include "deli_arm_pkg/deli_cam_controller.hpp"
+#include "deli_cam_controller.hpp"
 
 int main() {
     DeliCamController deli_cam;

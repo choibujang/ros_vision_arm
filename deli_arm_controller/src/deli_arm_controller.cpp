@@ -1,4 +1,4 @@
-#include "deli_arm_pkg/deli_arm_controller.h"
+#include "deli_arm_controller/deli_arm_controller.h"
 
 std::vector<double> DeliArmController::calcIK(std::vector<double> pick_target_pos) {
     double target_x = pick_target_pos[0];

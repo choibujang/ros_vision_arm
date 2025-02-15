@@ -1,4 +1,4 @@
-#include "deli_arm_pkg/deli_arm_controller.h"
+#include "deli_arm_controller/deli_arm_controller.h"
 
 int main() {
     DeliArmController deli_arm;
