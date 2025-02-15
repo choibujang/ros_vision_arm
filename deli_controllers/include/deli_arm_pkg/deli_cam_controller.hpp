@@ -55,7 +55,7 @@ public:
     float getDepthValue(int center_x, int center_y);
 
     void sendImage();
-    float calcCam3D(int u, int v);
+    std::vector<float> convertCoor(int px, int py);
 
     bool start_cam;
     float fx = 475.328;
@@ -68,7 +68,7 @@ private:
     int width = 640;
     int height = 400;
 
-    const char* server_ip = "192.168.191.174";
+    const char* server_ip = "192.168.0.76";
     int server_port = 8080;
     bool valid;
     const int header_size = 8;
