@@ -13,3 +13,8 @@
 MoveIt과 ROS 제어 노드를 통한 inverse kinematics 기반 경로 계획 및 동작 실행
 
 ROS Action 서버/클라이언트 구조를 사용하여 비동기식 Pick-and-Place 명령 수행
+
+## Installation
+Ubuntu 22.04
+ROS2 Humble
+
