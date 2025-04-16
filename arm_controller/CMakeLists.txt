@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.8)
-project(deli_arm_controller)
+project(arm_controller)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -9,12 +9,11 @@ if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic)
 endif()
 
-
 include_directories(include)
 
 find_library(I2C_LIB NAMES i2c PATHS /usr/lib /usr/local/lib)
 
-add_library(deli_arm_controller SHARED
+add_library(arm_controller SHARED
     src/deli_arm_controller.cpp
     src/I2CPeripheral.cpp
     src/pca9685_comm.cpp
