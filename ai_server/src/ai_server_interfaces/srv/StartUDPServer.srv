@@ -4,4 +4,3 @@ int32 port
 ---
 # Response
 bool success
-string message
