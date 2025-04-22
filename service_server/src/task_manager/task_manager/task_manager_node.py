@@ -21,6 +21,8 @@ class TaskManagerNode(Node):
         self._send_goal_future = self._action_client.send_goal_async(goal_msg)
         self._send_goal_future.add_done_callback(self.goal_response_callback)
 
+        return self._send_goal_future
+
     def goal_response_callback(self, future):
         goal_handle = future.result()
         if not goal_handle.accepted:
@@ -46,7 +48,7 @@ def main(args=None):
 
     action_client = TaskManagerNode()
 
-    future = action_client.send_goal(["apple"], [3])
+    future = action_client.send_goal(["apple", "banana", "carrot", "date"], [3,2,1,30])
 
     rclpy.spin_until_future_complete(action_client, future)
 
