@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.8)
-project(robot_arm_ros)
+project(ros_interfaces)
 
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic)
@@ -7,28 +7,15 @@ endif()
 
 # find dependencies
 find_package(ament_cmake REQUIRED)
-find_package(rclcpp REQUIRED)
-find_package(rclcpp_action REQUIRED)
-find_package(rclcpp_components REQUIRED)
-find_package(ros_interfaces REQUIRED)
+find_package(rosidl_default_generators REQUIRED)
 
-add_executable(robot_arm_node src/robot_arm_node.cpp)
+rosidl_generate_interfaces(${PROJECT_NAME}
+  "srv/ProductDetection.srv"
+  "srv/OpenUDPServer.srv"
+  "action/DispatchManipulationTask.action"
+)
 
-target_include_directories(robot_arm_node PUBLIC
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-  $<INSTALL_INTERFACE:include>)
-
-target_compile_features(robot_arm_node PUBLIC c_std_99 cxx_std_17)  # Require C99 and C++17
-
-
-ament_target_dependencies(robot_arm_node
-  "ros_interfaces"
-  "rclcpp"
-  "rclcpp_action"
-  "rclcpp_components")
-
-install(TARGETS robot_arm_node
-  DESTINATION lib/${PROJECT_NAME})
+ament_export_dependencies(rosidl_default_runtime)
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
