@@ -18,3 +18,10 @@ ROS Action 서버/클라이언트 구조를 사용하여 비동기식 Pick-and-P
 Ubuntu 22.04
 ROS2 Humble
 
+외부 ros_interfaces 쓰려고:
+source "path_to_ros_interfaces"/install/setup.bash
+
+export PYTHONPATH=/path/to/ros_interfaces/install/lib/python3.10/site-packages:$PYTHONPATH
+export AMENT_PREFIX_PATH="path_to_ros_interfaces"/install:$AMENT_PREFIX_PATH
+export CMAKE_PREFIX_PATH="path_to_ros_interfaces"/install:$CMAKE_PREFIX_PATH
+

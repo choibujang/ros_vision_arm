@@ -3,8 +3,8 @@ from queue import Queue
 
 import rclpy
 from rclpy.node import Node
-from ai_server_interfaces.srv import ProductDetection
-from ai_server_interfaces.srv import StartUDPServer
+from ros_interfaces.srv import ProductDetection
+from ros_interfaces.srv import StartUDPServer
 
 from ai_server_pkg.udp_receiver import UDPReceiver
 
