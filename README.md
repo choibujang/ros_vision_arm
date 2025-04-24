@@ -13,3 +13,23 @@
 MoveIt과 ROS 제어 노드를 통한 inverse kinematics 기반 경로 계획 및 동작 실행
 
 ROS Action 서버/클라이언트 구조를 사용하여 비동기식 Pick-and-Place 명령 수행
+
+## Setting
+OrbbecSDK 받고
+CMAKE_PREFIX_PATH에 OrbbecSDK 경로 넣고
+export CMAKE_PREFIX_PATH=$CMAKE_PREFIX_PATH:/opt/OrbbecSDK
+
+ld library path도 설정하고
+export LD_LIBRARY_PATH=/.../OrbbecSDK/lib/arm64:$LD_LIBRARY_PATH
+
+내 프로젝트 빌드
+cd ros_vision_arm/robot_arm/cam_controller
+# 1. 빌드 디렉토리 생성
+mkdir build
+cd build
+
+# 2. cmake로 설정 (CMakeLists.txt 있는 상위 디렉토리를 지정)
+cmake ..
+
+# 3. make로 빌드
+make
