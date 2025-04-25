@@ -12,31 +12,27 @@
 #include <iostream>
 // #include <sys/socket.h>
 // #include <netinet/in.h>
-// #include <arpa/inet.h>
-// #include <unistd.h>
-#include <vector>
-// #include <cstring>
+#include <unistd.h>
+#include <arpa/inet.h>
+#include <cstring>
 // #include <cstdlib>
 // #include <chrono>
 // #include <cerrno>
-// #include <thread>
+#include <vector>
+#include <thread>
 #include <opencv2/opencv.hpp>
 
-
-// #include "libobsensor/hpp/Pipeline.hpp"
-// #include "libobsensor/hpp/Error.hpp"
 #include "libobsensor/ObSensor.hpp"
-// #include "libobsensor/hpp/Sensor.hpp"
-// #include "libobsensor/hpp/Device.hpp"
-// #include "libobsensor/h/ObTypes.h"
+
 
 
 class CamController {
 public:
     cv::Mat alighDepthToRGB(const cv::Mat& depth);
-    // cv::Mat convertCoorPixToCam(int center_x, int center_y);
+    void startCameraStream();
+    std::vector<cv::Mat> getColorDepthImage(); 
     void getCameraParam();
-    void getCameraFrames();
+    void stopCameraStream();
     
 private:
     // camera
@@ -74,15 +70,20 @@ private:
 
     cv::Mat depth_to_rgb_trans = (cv::Mat_<float>(3, 1) << -9.98834, 0.0373371, -0.647012);
 
-    // const char* ai_server_ip = "192.168.0.76";
-    // int ai_server_port = 8080;
-    // const int header_size = 8;
-    // const int max_udp_payload = 65000;
-    // const int max_chunk_size = (max_udp_payload - header_size);
-    // const char* frame_end = "END";
+    /*********************************************
+     네트워크 소켓 변수들
+    **********************************************/
+    int sockfd;
+    struct sockaddr_in server_addr;
 
-    // int sock;
-    // struct sockaddr_in server_addr;
+    const char* ai_server_ip = "192.168.56.253";
+    int ai_server_port = 8888;
+    const int header_size = 8;
+    const int max_udp_payload = 65000;
+    const int max_chunk_size = (max_udp_payload - header_size);
+    const char* frame_end = "END";
+
+
 
 
 

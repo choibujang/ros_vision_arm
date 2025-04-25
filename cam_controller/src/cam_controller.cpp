@@ -262,17 +262,21 @@ void CamController::getCameraParam() {
     
 }
 
-void CamController::getCameraFrames() {
+void CamController::startCameraStream() {
     std::shared_ptr<ob::Config> config = std::make_shared<ob::Config>();
     config->enableVideoStream(OB_STREAM_COLOR, 640, 480, 30, OB_FORMAT_RGB);
     config->enableVideoStream(OB_STREAM_DEPTH, 640);
 
     // Start the pipeline with config
     this->pipe.start(config);
-    auto currentProfile = pipe.getEnabledStreamProfileList()->getProfile(0)->as<ob::VideoStreamProfile>();
+    auto currentProfile = this->pipe.getEnabledStreamProfileList()->getProfile(0)->as<ob::VideoStreamProfile>();
+}
+
+std::vector<cv::Mat> CamController::getColorDepthImage() {
+    std::vector<cv::Mat> ret;
 
     while(true) {
-        auto frameSet = pipe.waitForFrames(100);
+        auto frameSet = this->pipe.waitForFrames(100);
         if(frameSet == nullptr) {
             std::cout << "No frameSet" << std::endl;
             continue;
@@ -293,19 +297,21 @@ void CamController::getCameraFrames() {
         cv::Mat rgb_image(colorHeight, colorWidth, CV_8UC3, data);
         cv::Mat bgr_image;
         cv::cvtColor(rgb_image, bgr_image, cv::COLOR_RGB2BGR);
-        cv::imwrite("color.png", bgr_image);
-        std::cout << "write color image" << std::endl;
+        ret.push_back(bgr_image);
+
 
         int depthWidth = depthFrame->width();
         int depthHeight = depthFrame->height();
         uint16_t* depthData = (uint16_t*)depthFrame->data();
 
         cv::Mat depth_image(depthHeight, depthWidth, CV_16UC1, depthData);
-        cv::imwrite("depth.png", depth_image);
-        std::cout << "write depth image" << std::endl;
-        break;
-    }
 
+        ret.push_back(depth_image);
+        return ret;        
+    }
+}
+
+void CamController::stopCameraStream() {
     this->pipe.stop();
 }
     
