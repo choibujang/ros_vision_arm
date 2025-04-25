@@ -3,17 +3,19 @@
 int main() {
     CamController cam_controller;
     cam_controller.getCameraParam();
-    cam_controller.startCameraStream();
-    
-    std::vector<cv::Mat> images = cam_controller.getColorDepthImage();
 
-    cv::imwrite("color.png", images[0]);
-    std::cout << "write color image" << std::endl;
+    cam_controller.startCameraPipeline();
 
-    cv::imwrite("depth.png", images[1]);
-    std::cout << "write depth image" << std::endl;
+    if (cam_controller.getFrameSet()) {
+        std::vector<uint8_t> mjpeg_data = cam_controller.getMjpegColorData();
+        cv::Mat decoded_mjpeg_data = cv::imdecode(mjpeg_data, cv::IMREAD_COLOR);
+        cv::imwrite("color.png", decoded_mjpeg_data);
 
-    cam_controller.stopCameraStream();
+        cv::Mat depth_image = cam_controller.getMatDepthData();
+        cv::imwrite("depth.png", depth_image);
+    }
+
+    cam_controller.stopCameraPipeline();
     std::this_thread::sleep_for(std::chrono::milliseconds(200));
     
     return 0;

@@ -262,9 +262,9 @@ void CamController::getCameraParam() {
     
 }
 
-void CamController::startCameraStream() {
+void CamController::startCameraPipeline() {
     std::shared_ptr<ob::Config> config = std::make_shared<ob::Config>();
-    config->enableVideoStream(OB_STREAM_COLOR, 640, 480, 30, OB_FORMAT_RGB);
+    config->enableVideoStream(OB_STREAM_COLOR, 640, 480, 30, OB_FORMAT_MJPG);
     config->enableVideoStream(OB_STREAM_DEPTH, 640);
 
     // Start the pipeline with config
@@ -272,46 +272,56 @@ void CamController::startCameraStream() {
     auto currentProfile = this->pipe.getEnabledStreamProfileList()->getProfile(0)->as<ob::VideoStreamProfile>();
 }
 
-std::vector<cv::Mat> CamController::getColorDepthImage() {
-    std::vector<cv::Mat> ret;
-
-    while(true) {
-        auto frameSet = this->pipe.waitForFrames(100);
-        if(frameSet == nullptr) {
-            std::cout << "No frameSet" << std::endl;
+bool CamController::getFrameSet(int timeout_ms, int max_cnt) {
+    int try_cnt = 0;
+    
+    while (try_cnt < max_cnt) {
+        auto frameSet = this->pipe.waitForFrames(timeout_ms);
+        if (!frameSet) {
+            try_cnt++;
             continue;
         }
 
-        auto colorFrame = frameSet->colorFrame();
-        auto depthFrame = frameSet->depthFrame();
-
-        if (colorFrame == nullptr || depthFrame == nullptr) {
-            std::cout << "No frame" << std::endl;
-            continue;
+        if (frameSet->colorFrame() && frameSet->depthFrame()) {
+            this->current_frameset = frameSet;
+            return true;
         }
 
-        int colorWidth = colorFrame->width();
-        int colorHeight = colorFrame->height();
-        uint8_t* data = (uint8_t*)colorFrame->data();
-
-        cv::Mat rgb_image(colorHeight, colorWidth, CV_8UC3, data);
-        cv::Mat bgr_image;
-        cv::cvtColor(rgb_image, bgr_image, cv::COLOR_RGB2BGR);
-        ret.push_back(bgr_image);
-
-
-        int depthWidth = depthFrame->width();
-        int depthHeight = depthFrame->height();
-        uint16_t* depthData = (uint16_t*)depthFrame->data();
-
-        cv::Mat depth_image(depthHeight, depthWidth, CV_16UC1, depthData);
-
-        ret.push_back(depth_image);
-        return ret;        
+        try_cnt++;
     }
+
+    return false;
 }
 
-void CamController::stopCameraStream() {
+std::vector<uint8_t> CamController::getMjpegColorData() {
+    auto colorFrame = this->current_frameset->colorFrame();
+
+    if (colorFrame == nullptr) {
+        throw std::runtime_error("No color frame");
+    }
+
+    uint8_t* data = (uint8_t*)colorFrame->data();
+
+    return std::vector<uint8_t> (data, data + colorFrame->dataSize());    
+}
+
+cv::Mat CamController::getMatDepthData() {
+    auto depthFrame = this->current_frameset->depthFrame();
+
+    if (depthFrame == nullptr) {
+        throw std::runtime_error("No depth frame");
+    }
+
+    int depthWidth = depthFrame->width();
+    int depthHeight = depthFrame->height();
+    uint16_t* depthData = (uint16_t*)depthFrame->data();
+
+    cv::Mat depth_image(depthHeight, depthWidth, CV_16UC1, depthData);
+
+    return depth_image;        
+}
+
+void CamController::stopCameraPipeline() {
     this->pipe.stop();
 }
     

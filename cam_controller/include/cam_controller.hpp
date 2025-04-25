@@ -29,14 +29,17 @@
 class CamController {
 public:
     cv::Mat alighDepthToRGB(const cv::Mat& depth);
-    void startCameraStream();
-    std::vector<cv::Mat> getColorDepthImage(); 
     void getCameraParam();
-    void stopCameraStream();
+    void startCameraPipeline();
+    bool getFrameSet(int timeout_ms=100, int max_cnt=10);
+    std::vector<uint8_t> getMjpegColorData();
+    cv::Mat getMatDepthData();
+    void stopCameraPipeline();
     
 private:
     // camera
     ob::Pipeline pipe;
+    std::shared_ptr<ob::FrameSet> current_frameset;
 
     float depth_fx = 475.328;
     float depth_fy = 475.328;
