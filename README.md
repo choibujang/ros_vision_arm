@@ -21,6 +21,7 @@ Depth Camera를 이용해 대상 물체를 인식하고 3D 좌표를 추정한 �
 - Orbbec Astra SDK
 - 
 ### 2. 프로젝트 다운로드
+sudo apt-get install -y libi2c-dev
 
 ### 3. 환경변수 설정
 ```bash

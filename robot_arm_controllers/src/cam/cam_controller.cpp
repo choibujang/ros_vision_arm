@@ -1,4 +1,4 @@
-#include "cam_controller.hpp"
+#include "robot_arm_controllers/cam/cam_controller.hpp"
 
 
 
@@ -296,10 +296,6 @@ bool CamController::getFrameSet(int timeout_ms, int max_cnt) {
 std::vector<uint8_t> CamController::getMjpegColorData() {
     auto colorFrame = this->current_frameset->colorFrame();
 
-    if (colorFrame == nullptr) {
-        throw std::runtime_error("No color frame");
-    }
-
     uint8_t* data = (uint8_t*)colorFrame->data();
 
     return std::vector<uint8_t> (data, data + colorFrame->dataSize());    
@@ -307,10 +303,6 @@ std::vector<uint8_t> CamController::getMjpegColorData() {
 
 cv::Mat CamController::getMatDepthData() {
     auto depthFrame = this->current_frameset->depthFrame();
-
-    if (depthFrame == nullptr) {
-        throw std::runtime_error("No depth frame");
-    }
 
     int depthWidth = depthFrame->width();
     int depthHeight = depthFrame->height();

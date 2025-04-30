@@ -12,9 +12,7 @@
 #include <iostream>
 // #include <sys/socket.h>
 // #include <netinet/in.h>
-#include <unistd.h>
-#include <arpa/inet.h>
-#include <cstring>
+
 // #include <cstdlib>
 // #include <chrono>
 // #include <cerrno>
@@ -35,6 +33,7 @@ public:
     std::vector<uint8_t> getMjpegColorData();
     cv::Mat getMatDepthData();
     void stopCameraPipeline();
+
     
 private:
     // camera
@@ -72,20 +71,6 @@ private:
     );
 
     cv::Mat depth_to_rgb_trans = (cv::Mat_<float>(3, 1) << -9.98834, 0.0373371, -0.647012);
-
-    /*********************************************
-     네트워크 소켓 변수들
-    **********************************************/
-    int sockfd;
-    struct sockaddr_in server_addr;
-
-    const char* ai_server_ip = "192.168.56.253";
-    int ai_server_port = 8888;
-    const int header_size = 8;
-    const int max_udp_payload = 65000;
-    const int max_chunk_size = (max_udp_payload - header_size);
-    const char* frame_end = "END";
-
 
 
 

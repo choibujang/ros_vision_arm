@@ -1,4 +1,4 @@
-#include "deli_arm_controller/pca9685_comm.h"
+#include "robot_arm_controllers/arm/pca9685_comm.h"
 
 namespace PiPCA9685 {
 

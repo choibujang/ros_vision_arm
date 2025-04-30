@@ -1,4 +1,4 @@
-#include "deli_arm_controller/I2CPeripheral.h"
+#include "robot_arm_controllers/arm/I2CPeripheral.h"
 
 namespace PiPCA9685 {
 
