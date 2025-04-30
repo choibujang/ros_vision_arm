@@ -1,18 +1,36 @@
-# Object Detection and Pick-and-Place Robot Arm Using ROS and Depth Camera
-## Introduction
-이 시스템은 사용자가 ROS 액션 서버를 통해 작업 명령을 요청하면, Depth 카메라로 실시간 물체 인식 및 3D 위치 추정을 수행한 뒤, 로봇 팔이 해당 물체를 집어 지정된 위치로 옮깁니다.
-주요 구성 요소는 다음과 같습니다:
+# ROS 기반 로봇 팔 자동화 프로젝트 🤖
 
-- ROS 
-- Depth 카메라와 YOLO를 활용한 물체 인식 및 위치 추정
-- 로봇 팔의 경로 계획 및 제어
+## 📌 프로젝트 개요
+이 프로젝트는 주어진 물체 목록을 기반으로 
+Depth Camera를 이용해 대상 물체를 인식하고 3D 좌표를 추정한 뒤,
+로봇 팔을 제어하여 지정된 위치로 물체를 이동시키는 자동화 시스템을 구축하는 것을 목표로 합니다.
+
+## 🖼️ 시스템 구성도
+![System Architecture](./assets/system_architecture.png)
+## 📷 사용 장비
+- RaspberryPi 4B
+- [Orbbec] Astra Stereo S U3 3D Depth Camera
+- 서보모터 MG996R * 6
+- PCA9685 16채널 12비트 PWM 서보 드라이버
+- USB C PD TO 터미널 단자 트리거 모듈 MALE [HPRO-0024]
+
+## 🚀 Getting Started
+### 1. 시스템 요구사항
+- **운영체제**: Ubuntu 20.04
+- **ROS2 버전**: Humble
+- Orbbec Astra SDK
+### 2. 프로젝트 다운로드
+
+### 3. 환경변수 설정
+```bash
+export CMAKE_PREFIX_PATH=$CMAKE_PREFIX_PATH:{path_to_orbbecSDK}
+export LD_LIBRARY_PATH={path_to_OrbbecSDK}/lib/arm64:$LD_LIBRARY_PATH
+```
+
+### 4. 빌드 및 실행
 
 
-객체 탐지 알고리즘과 **3D 좌표 변환(TF)**을 통한 정확한 위치 추정
 
-MoveIt과 ROS 제어 노드를 통한 inverse kinematics 기반 경로 계획 및 동작 실행
-
-ROS Action 서버/클라이언트 구조를 사용하여 비동기식 Pick-and-Place 명령 수행
 
 ## Setting
 OrbbecSDK 받고
