@@ -17,8 +17,9 @@ Depth Camera를 이용해 대상 물체를 인식하고 3D 좌표를 추정한 �
 ## 🚀 Getting Started
 ### 1. 시스템 요구사항
 - **운영체제**: Ubuntu 20.04
-- **ROS2 버전**: Humble
+- **ROS 버전**: ROS2 Humble
 - Orbbec Astra SDK
+- 
 ### 2. 프로젝트 다운로드
 
 ### 3. 환경변수 설정
