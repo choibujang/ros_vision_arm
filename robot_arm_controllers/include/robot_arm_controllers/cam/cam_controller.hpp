@@ -36,7 +36,6 @@ public:
 
     
 private:
-    // camera
     ob::Pipeline pipe;
     std::shared_ptr<ob::FrameSet> current_frameset;
 
@@ -73,12 +72,6 @@ private:
     cv::Mat depth_to_rgb_trans = (cv::Mat_<float>(3, 1) << -9.98834, 0.0373371, -0.647012);
 
 
-
-
-/*
-width: 640
-height: 400
-*/
 };
 
 #endif

@@ -11,13 +11,13 @@
 
 class NetController {
 public:
-    NetController(const char* ip, int port);
+    NetController(std::string ip, int port);
     void sendMjpegData(std::vector<uint8_t> mjpeg_data);
 private:
     int sockfd;
     struct sockaddr_in server_addr;
-    const char* server_ip;
-    const int server_port;
+    std::string server_ip;
+    int server_port;
     
     int frame_id = 0;
     const int header_size = 8;

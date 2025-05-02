@@ -14,7 +14,7 @@ find_package(OrbbecSDK REQUIRED)
 find_package(OpenCV REQUIRED)
 find_library(I2C_LIB NAMES i2c PATHS /usr/lib /usr/local/lib)
 
-include_directories(${OpenCV_INCLUDE_DIRS})
+# include_directories(${OpenCV_INCLUDE_DIRS})
 
 add_library(arm_controller SHARED
     src/arm/arm_controller.cpp
@@ -72,7 +72,7 @@ install(DIRECTORY include/ DESTINATION include/)
 
 install(
   EXPORT robot_arm_controllers
-  FILE robot_arm_controllers.cmake
+  FILE robot_arm_controllersConfig.cmake
   NAMESPACE robot_arm_controllers::
   DESTINATION lib/cmake/robot_arm_controllers
 )

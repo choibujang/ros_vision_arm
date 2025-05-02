@@ -4,6 +4,9 @@
 #include <string>
 
 #include "ros_interfaces/action/dispatch_manipulation_task.hpp"
+#include "robot_arm_controllers/cam/cam_controller.hpp"
+#include "robot_arm_controllers/arm/arm_controller.h"
+#include "robot_arm_controllers/net/net_controller.hpp"
 #include "rclcpp/rclcpp.hpp"
 #include "rclcpp_action/rclcpp_action.hpp"
 #include "rclcpp_components/register_node_macro.hpp"
@@ -29,6 +32,8 @@ public:
 
 private:
   rclcpp_action::Server<DispatchManipulationTask>::SharedPtr action_server_;
+  CamController cam_controller();
+  NetController net_controller("192.168.0.92", 8080);
 
   rclcpp_action::GoalResponse handle_goal(
     const rclcpp_action::GoalUUID & uuid,

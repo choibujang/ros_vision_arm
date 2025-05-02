@@ -1,6 +1,6 @@
 #include "robot_arm_controllers/net/net_controller.hpp"
 
-NetController::NetController(const char* ip, const int port)
+NetController::NetController(std::string ip, int port)
 : server_ip(ip), server_port(port)
 {
     int try_cnt = 0;
@@ -21,7 +21,7 @@ NetController::NetController(const char* ip, const int port)
     memset(&this->server_addr, 0, sizeof(this->server_addr));
     this->server_addr.sin_family = AF_INET;
     this->server_addr.sin_port = htons(this->server_port);
-    inet_pton(AF_INET, this->server_ip, &(this->server_addr.sin_addr));
+    inet_pton(AF_INET, this->server_ip.c_str(), &(this->server_addr.sin_addr));
 
 }
 

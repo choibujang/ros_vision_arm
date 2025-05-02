@@ -27,11 +27,16 @@ sudo apt-get install -y libi2c-dev
 ```bash
 export CMAKE_PREFIX_PATH=$CMAKE_PREFIX_PATH:{path_to_orbbecSDK}
 export LD_LIBRARY_PATH={path_to_OrbbecSDK}/lib/arm64:$LD_LIBRARY_PATH
+
+export CMAKE_PREFIX_PATH=$CMAKE_PREFIX_PATH:{path_to_robot_arm_controllers/install}
 ```
 
 ### 4. 빌드 및 실행
 
-
+mkdir build && cd build
+cmake .. -DCMAKE_INSTALL_PREFIX=../install
+make install
+export CMAKE_PREFIX_PATH=$CMAKE_PREFIX_PATH:{../install/lib/cmake/robot_arm_controllers}
 
 
 ## Setting
