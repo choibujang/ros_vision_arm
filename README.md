@@ -15,46 +15,31 @@ Depth Camera를 이용해 대상 물체를 인식하고 3D 좌표를 추정한 �
 - USB C PD TO 터미널 단자 트리거 모듈 MALE [HPRO-0024]
 
 ## 🚀 Getting Started
-### 1. 시스템 요구사항
+### 1. 시스템 환경
 - **운영체제**: Ubuntu 20.04
 - **ROS 버전**: ROS2 Humble
-- Orbbec Astra SDK
-- 
-### 2. 프로젝트 다운로드
-sudo apt-get install -y libi2c-dev
 
-### 3. 환경변수 설정
+### 2. Orbbec Astra SDK 설치 및 환경변수 설정
+https://github.com/orbbec/OrbbecSDK
 ```bash
 export CMAKE_PREFIX_PATH=$CMAKE_PREFIX_PATH:{path_to_orbbecSDK}
 export LD_LIBRARY_PATH={path_to_OrbbecSDK}/lib/arm64:$LD_LIBRARY_PATH
-
-export CMAKE_PREFIX_PATH=$CMAKE_PREFIX_PATH:{path_to_robot_arm_controllers/install}
 ```
 
-### 4. 빌드 및 실행
+### 3. I2C 라이브러리 설치
+```bash
+sudo apt-get install -y libi2c-dev
+```
 
+### 3. 프로젝트 다운로드 및 빌드
+```bash
+git clone https://github.com/choibujang/ros_vision_arm.git
+cd robot_arm_controllers
 mkdir build && cd build
 cmake .. -DCMAKE_INSTALL_PREFIX=../install
 make install
-export CMAKE_PREFIX_PATH=$CMAKE_PREFIX_PATH:{../install/lib/cmake/robot_arm_controllers}
-
-
-## Setting
-OrbbecSDK 받고
-CMAKE_PREFIX_PATH에 OrbbecSDK 경로 넣고
-export CMAKE_PREFIX_PATH=$CMAKE_PREFIX_PATH:/opt/OrbbecSDK
-
-ld library path도 설정하고
-export LD_LIBRARY_PATH=/.../OrbbecSDK/lib/arm64:$LD_LIBRARY_PATH
-
-내 프로젝트 빌드
-cd ros_vision_arm/robot_arm/cam_controller
-# 1. 빌드 디렉토리 생성
-mkdir build
-cd build
-
-# 2. cmake로 설정 (CMakeLists.txt 있는 상위 디렉토리를 지정)
-cmake ..
-
-# 3. make로 빌드
-make
+```
+환경변수 설정:
+```bash
+export CMAKE_PREFIX_PATH=$CMAKE_PREFIX_PATH:{path_to_robot_arm_controllers/install/lib/cmake/robot_arm_controllers}
+```
