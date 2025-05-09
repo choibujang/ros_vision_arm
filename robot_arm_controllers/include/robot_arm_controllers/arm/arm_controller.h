@@ -12,9 +12,9 @@
 #include <sstream>
 #include "pca9685_comm.h"
 
-class DeliArmController {
+class ArmController {
 public:
-    DeliArmController() {
+    ArmController() {
         pca.set_pwm_freq(50);
 
         int min_pulse = 102; 
@@ -143,5 +143,8 @@ private:
     double close_gripper = 105.0;
 
     PiPCA9685::PCA9685 pca;
+    
+    double min_ms = 0.6;    // 0도
+    double max_ms = 2.4;    // 180도
 };
 #endif 

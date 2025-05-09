@@ -1,6 +1,6 @@
 #include "robot_arm_controllers/arm/arm_controller.h"
 
-std::vector<double> DeliArmController::calcIK(std::vector<double> pick_target_pos) {
+std::vector<double> ArmController::calcIK(std::vector<double> pick_target_pos) {
     double target_x = pick_target_pos[0];
     double target_y = pick_target_pos[1];
     double target_z = pick_target_pos[2];
@@ -61,7 +61,7 @@ std::vector<double> DeliArmController::calcIK(std::vector<double> pick_target_po
     return ik_result;
 }
 
-// void DeliArmController::writeRasp(int joint_num, double angle) {
+// void ArmController::writeRasp(int joint_num, double angle) {
 //     int min_pulse = 102; 
 //     int max_pulse = 512; 
 
@@ -82,7 +82,7 @@ std::vector<double> DeliArmController::calcIK(std::vector<double> pick_target_po
     
 // }
 
-void DeliArmController::writeRasp(int joint_num, double angle) {
+void ArmController::writeRasp(int joint_num, double angle) {
     int min_pulse = 102; 
     int max_pulse = 512; 
 
@@ -106,7 +106,7 @@ void DeliArmController::writeRasp(int joint_num, double angle) {
 }
 
 
-void DeliArmController::move321JointsToNeatPos() {
+void ArmController::move321JointsToNeatPos() {
     std::cout << "!move321JointsToNeatPos entered!" << std::endl;
     for (const auto& pair : neat_321joints) {
         writeRasp(pair.first, pair.second);
@@ -116,7 +116,7 @@ void DeliArmController::move321JointsToNeatPos() {
     }
 }
 
-void DeliArmController::move321JointsToCameraPos() {
+void ArmController::move321JointsToCameraPos() {
     std::cout << "!move321JointsToCameraPos entered!" << std::endl;
     for (const auto& pair : camera_321joints) {
         writeRasp(pair.first, pair.second);
@@ -127,7 +127,7 @@ void DeliArmController::move321JointsToCameraPos() {
 }
 
 
-void DeliArmController::move321Joints(std::vector<double> goal_joints) {
+void ArmController::move321Joints(std::vector<double> goal_joints) {
     std::cout << "!move321Joints entered!" << std::endl;
     for (int i = goal_joints.size()-1; i > 0; i--) {
         std::cout << i << ": " << goal_joints[i] << ", ";
