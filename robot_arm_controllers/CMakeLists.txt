@@ -50,11 +50,11 @@ target_include_directories(net_controller
     $<INSTALL_INTERFACE:include>
 )
 
-add_executable(depth_test_cam test/depth_test_cam.cpp)
-add_executable(camera_test test/camera_test.cpp)
-
-target_link_libraries(depth_test_cam cam_controller)
-target_link_libraries(camera_test cam_controller)
+#add_executable(depth_test_cam test/depth_test_cam.cpp)
+#add_executable(camera_test test/camera_test.cpp)
+#
+#target_link_libraries(depth_test_cam cam_controller)
+#target_link_libraries(camera_test cam_controller)
 
 
 install(

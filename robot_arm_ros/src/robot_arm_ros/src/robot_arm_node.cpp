@@ -18,7 +18,9 @@ public:
   using GoalHandleDMT = rclcpp_action::ServerGoalHandle<DispatchManipulationTask>;
 
   explicit RobotArmNode(const rclcpp::NodeOptions & options = rclcpp::NodeOptions())
-  : Node("robot_arm_node", options)
+  : Node("robot_arm_node", options),
+    net_controller("192.168.0.92", 8080),
+    cam_controller()
   {
     using namespace std::placeholders;
 
@@ -32,8 +34,8 @@ public:
 
 private:
   rclcpp_action::Server<DispatchManipulationTask>::SharedPtr action_server_;
-  CamController cam_controller();
-  NetController net_controller("192.168.0.92", 8080);
+  NetController net_controller;
+  CamController cam_controller;
 
   rclcpp_action::GoalResponse handle_goal(
     const rclcpp_action::GoalUUID & uuid,

@@ -19,8 +19,9 @@ Depth Camera를 이용해 대상 물체를 인식하고 3D 좌표를 추정한 �
 - **운영체제**: Ubuntu 20.04
 - **ROS 버전**: ROS2 Humble
 
-### 2. Orbbec Astra SDK 설치 및 환경변수 설정
-https://github.com/orbbec/OrbbecSDK
+### 2. Orbbec Astra SDK 설치
+https://github.com/orbbec/OrbbecSDK   
+환경변수 설정:
 ```bash
 export CMAKE_PREFIX_PATH=$CMAKE_PREFIX_PATH:{path_to_orbbecSDK}
 export LD_LIBRARY_PATH={path_to_OrbbecSDK}/lib/arm64:$LD_LIBRARY_PATH
@@ -32,6 +33,7 @@ sudo apt-get install -y libi2c-dev
 ```
 
 ### 3. 프로젝트 다운로드 및 빌드
+- robot_arm_controllers 빌드
 ```bash
 git clone https://github.com/choibujang/ros_vision_arm.git
 cd robot_arm_controllers
@@ -41,5 +43,17 @@ make install
 ```
 환경변수 설정:
 ```bash
-export CMAKE_PREFIX_PATH=$CMAKE_PREFIX_PATH:{path_to_robot_arm_controllers/install/lib/cmake/robot_arm_controllers}
+export CMAKE_PREFIX_PATH=$CMAKE_PREFIX_PATH:{path_to_robot_arm_controllers}/install/lib/cmake/robot_arm_controllers
+```
+- ros_interfaces 빌드
+```bash
+cd ros_interfaces
+colcon build
+source install/setup.bash
+```
+-robot_arm_ros 빌드
+```bash
+cd robot_arm_ros
+colcon build
+source install/setup.bash
 ```
