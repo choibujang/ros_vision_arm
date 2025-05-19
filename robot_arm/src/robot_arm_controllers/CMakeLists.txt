@@ -10,11 +10,10 @@ if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
 endif()
 
 # find dependencies
+find_package(ament_cmake REQUIRED)
 find_package(OrbbecSDK REQUIRED)
 find_package(OpenCV REQUIRED)
 find_library(I2C_LIB NAMES i2c PATHS /usr/lib /usr/local/lib)
-
-# include_directories(${OpenCV_INCLUDE_DIRS})
 
 add_library(arm_controller SHARED
     src/arm/arm_controller.cpp
@@ -59,17 +58,30 @@ install(
     arm_controller
     cam_controller
     net_controller
-  EXPORT robot_arm_controllers
+  EXPORT export_robot_arm_controllers
   LIBRARY DESTINATION lib
   ARCHIVE DESTINATION lib
-  RUNTIME DESTINATION lib/${PROJECT_NAME}
+  RUNTIME DESTINATION bin
+  INCLUDES DESTINATION include
 )
-
-install(DIRECTORY include/ DESTINATION include/)
 
 install(
-  EXPORT robot_arm_controllers
-  FILE robot_arm_controllersConfig.cmake
+  DIRECTORY include/ 
+  DESTINATION include/)
+
+install(
+  EXPORT export_robot_arm_controllers
+  FILE robot_arm_controllersTargets.cmake
   NAMESPACE robot_arm_controllers::
-  DESTINATION lib/cmake/robot_arm_controllers
+  DESTINATION share/robot_arm_controllers/cmake
 )
+
+ament_export_include_directories(include)
+ament_export_libraries(
+  arm_controller
+  cam_controller
+  net_controller
+)
+ament_export_targets(export_robot_arm_controllers)
+
+ament_package()

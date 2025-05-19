@@ -33,27 +33,9 @@ sudo apt-get install -y libi2c-dev
 ```
 
 ### 3. 프로젝트 다운로드 및 빌드
-- robot_arm_controllers 빌드
+- robot_arm 빌드
 ```bash
-git clone https://github.com/choibujang/ros_vision_arm.git
-cd robot_arm_controllers
-mkdir build && cd build
-cmake .. -DCMAKE_INSTALL_PREFIX=../install
-make install
-```
-환경변수 설정:
-```bash
-export CMAKE_PREFIX_PATH=$CMAKE_PREFIX_PATH:{path_to_robot_arm_controllers}/install/lib/cmake/robot_arm_controllers
-```
-- ros_interfaces 빌드
-```bash
-cd ros_interfaces
-colcon build
-source install/setup.bash
-```
--robot_arm_ros 빌드
-```bash
-cd robot_arm_ros
+cd robot_arm
 colcon build
 source install/setup.bash
 ```
