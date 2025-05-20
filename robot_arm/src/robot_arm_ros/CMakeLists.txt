@@ -16,14 +16,15 @@ find_package(robot_arm_controllers REQUIRED)
 
 add_executable(robot_arm_node src/robot_arm_node.cpp)
 
-target_include_directories(robot_arm_node PUBLIC
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-  $<INSTALL_INTERFACE:include>)
+target_include_directories(robot_arm_node
+  PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:include>
+)
 
 target_link_libraries(robot_arm_node 
-  robot_arm_controllers::arm_controller
-  robot_arm_controllers::cam_controller
-  robot_arm_controllers::net_controller
+  PUBLIC
+    robot_arm_controllers
 )
 
 target_compile_features(robot_arm_node PUBLIC c_std_99 cxx_std_17)  # Require C99 and C++17

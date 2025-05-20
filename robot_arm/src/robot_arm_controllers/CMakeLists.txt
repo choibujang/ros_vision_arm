@@ -1,3 +1,5 @@
+message(STATUS "==== CMakeLists.txt is being read ====")
+
 cmake_minimum_required(VERSION 3.8)
 project(robot_arm_controllers)
 
@@ -13,51 +15,46 @@ endif()
 find_package(ament_cmake REQUIRED)
 find_package(OrbbecSDK REQUIRED)
 find_package(OpenCV REQUIRED)
+find_package(orocos_kdl REQUIRED)
+find_package(kdl_parser REQUIRED)
+find_package(ament_index_cpp REQUIRED)
 find_library(I2C_LIB NAMES i2c PATHS /usr/lib /usr/local/lib)
 
-add_library(arm_controller SHARED
+add_library(robot_arm_controllers SHARED
     src/arm/arm_controller.cpp
     src/arm/I2CPeripheral.cpp
     src/arm/pca9685_comm.cpp
-)
-target_include_directories(arm_controller
-  PUBLIC 
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-    $<INSTALL_INTERFACE:include>
-)
-target_link_libraries(arm_controller PUBLIC ${I2C_LIB})
-
-
-add_library(cam_controller SHARED
     src/cam/cam_controller.cpp
+    src/net/net_controller.cpp
 )
-target_include_directories(cam_controller 
+
+target_include_directories(robot_arm_controllers
   PUBLIC 
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include>
     ${OpenCV_INCLUDE_DIRS}
 )
-target_link_libraries(cam_controller PUBLIC OrbbecSDK::OrbbecSDK ${OpenCV_LIBS})
 
+target_link_libraries(robot_arm_controllers
+  PUBLIC
+    ${I2C_LIB} 
+    OrbbecSDK::OrbbecSDK
+    ${OpenCV_LIBS}
 
-add_library(net_controller SHARED
-    src/net/net_controller.cpp
-)
-target_include_directories(net_controller 
-  PUBLIC 
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-    $<INSTALL_INTERFACE:include>
 )
 
+ament_target_dependencies(robot_arm_controllers
+  PUBLIC
+    ament_index_cpp
+    orocos_kdl
+    kdl_parser
+)
 
 add_executable(motor_test test/motor_test.cpp)
-target_link_libraries(motor_test arm_controller)
+target_link_libraries(motor_test PUBLIC robot_arm_controllers)
 
 install(
-  TARGETS 
-    arm_controller
-    cam_controller
-    net_controller
+  TARGETS robot_arm_controllers
   EXPORT export_robot_arm_controllers
   LIBRARY DESTINATION lib
   ARCHIVE DESTINATION lib
@@ -67,7 +64,8 @@ install(
 
 install(
   DIRECTORY include/ 
-  DESTINATION include/)
+  DESTINATION include/
+)
 
 install(
   EXPORT export_robot_arm_controllers
@@ -77,11 +75,7 @@ install(
 )
 
 ament_export_include_directories(include)
-ament_export_libraries(
-  arm_controller
-  cam_controller
-  net_controller
-)
+ament_export_libraries(robot_arm_controllers)
 ament_export_targets(export_robot_arm_controllers)
 
 ament_package()

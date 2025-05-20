@@ -15,9 +15,13 @@
 #include <chrono>
 #include <thread>
 #include <cmath>
-#include <fstream>
-#include <iostream>
 #include <sstream>
+
+#include <fstream>
+#include <kdl/chain.hpp>
+#include <kdl/chainiksolverpos_lma.hpp>
+#include <kdl_parser/kdl_parser.hpp>
+#include <ament_index_cpp/get_package_share_directory.hpp>
 #include "pca9685_comm.h"
 
 class ArmController {
@@ -25,134 +29,29 @@ public:
     ArmController() {
         pca.set_pwm_freq(50);
 
-        int min_pulse = 102; 
-        int max_pulse = 512;
-
-        int target_pulse;
-
-        target_pulse = min_pulse + (95 / 180.0) * (max_pulse - min_pulse);
-        pca.set_pwm(0, 0, target_pulse);
-        current_joints[0] = 95;   
-
-        target_pulse = min_pulse + (close_gripper / 180.0) * (max_pulse - min_pulse);
-        pca.set_pwm(5, 0, target_pulse);
-        current_joints[5] = close_gripper;
-
-        target_pulse = min_pulse + (fixed_joint4 / 180.0) * (max_pulse - min_pulse);
-        pca.set_pwm(4, 0, target_pulse);
-        current_joints[4] = fixed_joint4;
-
-        target_pulse = min_pulse + (neat_321joints[3] / 180.0) * (max_pulse - min_pulse);
-        pca.set_pwm(3, 0, target_pulse);
-        current_joints[3] = neat_321joints[3];
-
-        target_pulse = min_pulse + (neat_321joints[2] / 180.0) * (max_pulse - min_pulse);
-        pca.set_pwm(2, 0, target_pulse);
-        current_joints[2] = neat_321joints[2];       
-
-        target_pulse = min_pulse + (neat_321joints[1] / 180.0) * (max_pulse - min_pulse);
-        pca.set_pwm(1, 0, target_pulse);
-        current_joints[1] = neat_321joints[1];       
-
-        std::cout << "Deli arm initialized" << std::endl;
-    }
-
-    double convertJoint(int joint_num, double ik_angle) { 
-        double converted_angle;
-        if (joint_num == 0) {
-            converted_angle = ik_angle + joints_map[joint_num];
-            if (converted_angle < 10.0 || converted_angle > 170.0) {
-                std::cout << "invalid angle " << joint_num << std::endl;
-                return std::nan("");
-            }
-        } else if (joint_num == 1) {
-            converted_angle = -1 * (ik_angle - joints_map[joint_num]);
-            if (converted_angle < 10.0 || converted_angle > 170.0) {
-                std::cout << "invalid angle " << joint_num << std::endl;
-                return std::nan("");
-            }
-        } else if (joint_num == 2) {
-            converted_angle = ik_angle + joints_map[joint_num];
-            if (converted_angle < 10.0 || converted_angle > 170.0) {
-                std::cout << "invalid angle " << joint_num << std::endl;
-                return std::nan("");
-            }
-        } else if (joint_num == 3) {
-            converted_angle = -1 * (ik_angle - joints_map[joint_num]);
-            if (converted_angle < 10.0 || converted_angle > 170.0) {
-                std::cout << "invalid angle " << joint_num << std::endl;
-                return std::nan("");
-            }
-        } else {
-            std::cout << "invalid joint_num" << std::endl;
-            return std::nan("");
+        std::string urdf_file = ament_index_cpp::get_package_share_directory("my_robot_description") + "/urdf/my_robot.urdf";
+        std::string base_link = "base_link";
+        std::string end_effector = "end_effector";
+    
+        if (!loadKDLChain(urdf_file, base_link, end_effector)) {
+            throw std::runtime_error("Failed to initialize KDL chain.");
         }
-
-        return converted_angle;
+    
+        // Initialize IK solver
+        ik_solver = std::make_unique<KDL::ChainIkSolverPos_LMA>(kdl_chain);
+    
+        std::cout << "Robot Arm initialized with KDL chain from URDF." << std::endl;
     }
 
+    bool loadKDLChain(const std::string& urdf_file, const std::string& base_link, const std::string& end_effector);
     std::vector<double> calcIK(std::vector<double> pick_target_pos);
-    void writeRasp(int joint_num, double angle);
-    void move321JointsToNeatPos();
-    void openGripper(int value=90) {
-        std::cout << "!openGripper entered!" << std::endl;
-        writeRasp(5, value);
-        for (int i = 0; i < 6; i++) {
-            std::cout << "joint " << i << " pwm: " << pca.get_pwm(i) << std::endl;
-        }
-    }
-    void closeGripper(int value=105) { 
-        std::cout << "!closeGripper entered!" << std::endl;
-        writeRasp(5, value); 
-        for (int i = 0; i < 6; i++) {
-            std::cout << "joint " << i << " pwm: " << pca.get_pwm(i) << std::endl;
-        }
-    }
-    void moveBaseLink(double angle) {
-        std::cout << "!moveBaseLink entered!" << std::endl;
-        writeRasp(0, angle);
-        for (int i = 0; i < 6; i++) {
-            std::cout << "joint " << i << " pwm: " << pca.get_pwm(i) << std::endl;
-        }
-    }
-    void move321Joints(std::vector<double> goal_joints);
-    void move321JointsToCameraPos();
 
 private:
-    std::vector<double> links = {85, 104, 293}; // mm, 손목1 103 110
-    // 0번 조인트: 10 앞에서봤을때 왼쪽 90 중간 170 오른쪽
-    // 1번 조인트: 170 앞 90 중간 10 뒤
-    // 2번 조인트: 10 앞 90 중간 170 뒤
-    // 3번 조인트: 170 앞 90 중간 10 뒤
-    // 4번 조인트: 120 수평
-    // 5번 조인트: open: 100, close: 80
-    std::map<int, double> joints_map = {
-        {0, 95},    // 앞 x, 오른쪽 y, 위 z. 10이 -y 쪽
-        {1, 180},   // 앞 x, 위 y. 170일 때 y축과 평행
-        {2, 90},      // 90일 때 1번 joint와 일직선, 10이 아래쪽
-        {3, 90}     // 90일 때 2번 joint와 일직선
-    };
-
-    std::vector<double> current_joints = {std::nan(""), std::nan(""), std::nan(""), std::nan(""), std::nan(""), std::nan("")};
-    std::map<int, double> neat_321joints = {
-        {1, 50},
-        {2, 30},
-        {3, 160}
-    };
-
-    std::map<int, double> camera_321joints = {
-        {1, 60},
-        {2, 15},
-        {3, 165}
-    };
-
-    double fixed_joint4 = 120.0;
-    double open_gripper = 90.0;
-    double close_gripper = 105.0;
-
     PiPCA9685::PCA9685 pca;
-    
-    double min_ms = 0.6;    // 0도
-    double max_ms = 2.4;    // 180도
+    KDL::Chain kdl_chain;
+    std::unique_ptr<KDL::ChainIkSolverPos_LMA> ik_solver;
+    std::vector<double> current_joints = {0, 0, 0, 0, 0, 0};
+    double min_ms = 0.6;
+    double max_ms = 2.4;
 };
 #endif 

@@ -12,6 +12,15 @@
   <depend>OpenCV</depend>
   <depend>orbbec_sdk</depend>
 
+  <build_depend>ament_index_cpp</build_depend>
+  <exec_depend>ament_index_cpp</exec_depend>
+
+  <build_depend>kdl_parser</build_depend>
+  <exec_depend>kdl_parser</exec_depend>
+
+  <build_depend>orocos_kdl</build_depend>
+  <exec_depend>orocos_kdl</exec_depend>
+
   <test_depend>ament_lint_auto</test_depend>
   <test_depend>ament_lint_common</test_depend>
 
