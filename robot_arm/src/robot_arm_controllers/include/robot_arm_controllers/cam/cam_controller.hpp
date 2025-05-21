@@ -1,43 +1,74 @@
-/*
-라즈베리 파이에 연결되어 있는 카메라를 담당하는 클래스.
-
-카메라를 끄고 키고,
-카메라 프레임을 ai server에 보내고,
-카메라 기준 3d pose를 계산하는 역할을 담당한다.
-*/
-
 #ifndef CAM_CONTROLLER_HPP
 #define CAM_CONTROLLER_HPP
 
 #include <iostream>
-// #include <sys/socket.h>
-// #include <netinet/in.h>
-
-// #include <cstdlib>
-// #include <chrono>
-// #include <cerrno>
 #include <vector>
 #include <thread>
 #include <opencv2/opencv.hpp>
 
 #include "libobsensor/ObSensor.hpp"
 
-
-
+/**
+ * @class CamController
+ * @brief 카메라 on/off, 프레임 가져오기, depth map 생성, 픽셀 좌표->3d좌표 변환 기능 제공
+ */
 class CamController {
 public:
-    cv::Mat alighDepthToRGB(const cv::Mat& depth);
-    void getCameraParam();
+    /**
+     * @brief 카메라의 color, depth 스트리밍을 활성화한다.  
+     */
     void startCameraPipeline();
+
+    /**
+     * @brief 활성화된 스트림에서 frameset을 가져와 클래스 멤버 current_frameset에 저장한다.
+     * @param timeout_ms 프레임 수신 대기 최대 시간
+     * @param max_cnt 최대 재시도 횟수
+     * @return frameset 수신 성공 여부
+     */
     bool getFrameSet(int timeout_ms=100, int max_cnt=10);
-    std::vector<uint8_t> getMjpegColorData();
-    cv::Mat getMatDepthData();
+
+    /**
+     * @brief 카메라 스트리밍을 중지한다.
+     */
     void stopCameraPipeline();
 
+    /**
+     * @brief current_frameset에서 color frame을 가져온다.
+     * @return 이미지 데이터를 담은 vector
+     */
+    std::vector<uint8_t> getColorData();
+
+    /**
+     * @brief current_frameset에서 depth frame을 가져온다.
+     * @return depth 데이터를 담은 640*400 행렬
+     */ 
+    cv::Mat getDepthData();
+
+    /**
+     * @brief Depth 픽셀을 3D 좌표로 변환한 후, RGB 카메라 좌표계로 변환하고
+     *        이를 다시 RGB 이미지의 픽셀 위치로 변환하여, RGB 프레임 기준의 Depth map 생성.
+     *        RGB 이미지와 Depth 이미지의 해상도 차이로 인해
+     *        Depth = 0인 빈 영역은 3x3 주변 평균으로 보간하여 채움.
+     * @param depth 원본 Depth 데이터 (640 * 400)
+     * @return RGB 픽셀에 대응하는 depth map (640 * 480)
+     */
+    cv::Mat createDepthMap(const cv::Mat& depth);
+
+    /**
+     * @brief RGB 이미지의 특정 픽셀 좌표를 카메라 좌표계 기준 3D 좌표로 변환한다.
+     * @param depth 원본 Depth 데이터 (640 * 400)
+     * @return RGB 픽셀에 대응하는 depth map (640 * 480)
+     */
+    vector<float> pixelToCameraCoords(int u, int v, cv::Mat& depth_map);
+
+    /**
+     * @brief 카메라의 intrinsic parameter들을 출력한다.
+     */ 
+    void getCameraParam();
     
 private:
-    ob::Pipeline pipe;
-    std::shared_ptr<ob::FrameSet> current_frameset;
+    ob::Pipeline pipe_;
+    std::shared_ptr<ob::FrameSet> current_frameset_;
 
     float depth_fx = 475.328;
     float depth_fy = 475.328;

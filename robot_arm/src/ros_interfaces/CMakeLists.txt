@@ -10,9 +10,10 @@ find_package(ament_cmake REQUIRED)
 find_package(rosidl_default_generators REQUIRED)
 
 rosidl_generate_interfaces(${PROJECT_NAME}
-  "srv/ProductDetection.srv"
-  "srv/OpenUDPServer.srv"
   "action/DispatchManipulationTask.action"
+  "msg/DetectedObject.msg"
+  "msg/DetectedObjectArray.msg"
+  DEPENDENCIES geometry_msgs
 )
 
 ament_export_dependencies(rosidl_default_runtime)
