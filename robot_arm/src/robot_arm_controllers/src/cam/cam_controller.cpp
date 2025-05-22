@@ -1,7 +1,7 @@
 #include "robot_arm_controllers/cam/cam_controller.hpp"
 
 cv::Mat CamController::createDepthMap(const cv::Mat& depth) {
-    cv::Mat aligned = cv::Mat::zeros(this->rgb_height, this->rgb_width, CV_16UC1);
+    cv::Mat aligned = cv::Mat::zeros(rgb_height_, rgb_width_, CV_16UC1);
 
     for (int vd = 0; vd < depth.rows; ++vd) {
         for (int ud = 0; ud < depth.cols;) {
@@ -9,13 +9,13 @@ cv::Mat CamController::createDepthMap(const cv::Mat& depth) {
             if (z == 0) continue;
 
             // Depth 픽셀 좌표를 Depth 카메라 좌표계의 3d 좌표로 변환
-            float Xd = (ud - this->depth_cx) * z / this->depth_fx;
-            float Yd = (vd - this->depth_cy) * z / this->depth_fy;
+            float Xd = (ud - depth_cx_) * z / depth_fx_;
+            float Yd = (vd - depth_cy_) * z / depth_fy_;
             float Zd = z;
 
             // Depth → RGB 카메라 좌표계로 변환
             cv::Mat depth_3d = (cv::Mat_<float>(3,1) << Xd, Yd, Zd);
-            cv::Mat rgb_3d = this->depth_to_rgb_rot * depth_3d + this->depth_to_rgb_trans;
+            cv::Mat rgb_3d = depth_to_rgb_rot_ * depth_3d + depth_to_rgb_trans_;
 
             float Xr = rgb_3d.at<float>(0);
             float Yr = rgb_3d.at<float>(1);
@@ -24,11 +24,11 @@ cv::Mat CamController::createDepthMap(const cv::Mat& depth) {
             if (Zr <= 0) continue; // 뒤에 있는 점 무시
 
             // RGB 카메라에서의 픽셀 위치
-            int u_rgb = static_cast<int>(this->rgb_fx * Xr / Zr + this->rgb_cx);
-            int v_rgb = static_cast<int>(this->rgb_fy * Yr / Zr + this->rgb_cy);
+            int u_rgb = static_cast<int>(rgb_fx_ * Xr / Zr + rgb_cx_);
+            int v_rgb = static_cast<int>(rgb_fy_ * Yr / Zr + rgb_cy_);
 
             // 범위 체크 후 저장
-            if (u_rgb >= 0 && u_rgb < this->rgb_width && v_rgb >= 0 && v_rgb < this->rgb_height) {
+            if (u_rgb >= 0 && u_rgb < rgb_width_ && v_rgb >= 0 && v_rgb < rgb_height_) {
                 uint16_t& current = aligned.at<uint16_t>(v_rgb, u_rgb);
                 // 이미 값이 있다면 더 가까운 z만 저장
                 if (current == 0 || Zr < current) {
@@ -132,6 +132,8 @@ void CamController::startCameraPipeline() {
     // Start the pipeline with config
     pipe_.start(config);
     auto currentProfile = pipe_.getEnabledStreamProfileList()->getProfile(0)->as<ob::VideoStreamProfile>();
+
+    std::cout << "Start Pipeline" << std::endl;
 }
 
 bool CamController::getFrameSet(int timeout_ms, int max_cnt) {
@@ -140,12 +142,14 @@ bool CamController::getFrameSet(int timeout_ms, int max_cnt) {
     while (try_cnt < max_cnt) {
         auto frameSet = pipe_.waitForFrames(timeout_ms);
         if (!frameSet) {
+            std::cout << "Failed to get frameSet" << std::endl;
             try_cnt++;
             continue;
         }
 
         if (frameSet->colorFrame() && frameSet->depthFrame()) {
             current_frameset_ = frameSet;
+            std::cout << "Got frameSet from camera" << std::endl;
             return true;
         }
 
@@ -156,6 +160,7 @@ bool CamController::getFrameSet(int timeout_ms, int max_cnt) {
 }
 
 std::vector<uint8_t> CamController::getColorData() {
+    std::cout << "Getting color data from colorFrame" << std::endl;
     auto colorFrame = current_frameset_->colorFrame();
 
     uint8_t* data = (uint8_t*)colorFrame->data();
@@ -179,7 +184,7 @@ void CamController::stopCameraPipeline() {
     pipe_.stop();
 }
     
-vector<float> CamController::pixelToCameraCoords(int u, int v, const cv::Mat& depth_map) {
+std::vector<float> CamController::pixelToCameraCoords(int u, int v, const cv::Mat& depth_map) {
     float Z = depth_map.at<uint16_t>(v, u);
     float X = (u - rgb_cx_) * Z / rgb_fx_;
     float Y = (v - rgb_cy_) * Z / rgb_fy_;

@@ -30,10 +30,7 @@ public:
     using DetectedObjectArray = ros_interfaces::msg::DetectedObjectArray;
 
     explicit RobotArmNode(const rclcpp::NodeOptions & options = rclcpp::NodeOptions())
-    : Node("robot_arm_node", options),
-        arm_controller_(),
-        cam_controller_(),
-        net_controller_()
+    : Node("robot_arm_node", options)
     {
         using namespace std::placeholders;
 

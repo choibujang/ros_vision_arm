@@ -59,7 +59,7 @@ public:
      * @param depth 원본 Depth 데이터 (640 * 400)
      * @return RGB 픽셀에 대응하는 depth map (640 * 480)
      */
-    vector<float> pixelToCameraCoords(int u, int v, cv::Mat& depth_map);
+    std::vector<float> pixelToCameraCoords(int u, int v, const cv::Mat& depth_map);
 
     /**
      * @brief 카메라의 intrinsic parameter들을 출력한다.
@@ -70,37 +70,37 @@ private:
     ob::Pipeline pipe_;
     std::shared_ptr<ob::FrameSet> current_frameset_;
 
-    float depth_fx = 475.328;
-    float depth_fy = 475.328;
-    float depth_cx = 315.204;
-    float depth_cy = 196.601;
-    float depth_width = 640;
-    float depth_height = 400;
+    float depth_fx_ = 475.328;
+    float depth_fy_ = 475.328;
+    float depth_cx_ = 315.204;
+    float depth_cy_ = 196.601;
+    float depth_width_ = 640;
+    float depth_height_ = 400;
 
-    float rgb_fx = 453.183;
-    float rgb_fy = 453.183;
-    float rgb_cx = 333.191;
-    float rgb_cy = 241.26;
-    float rgb_width = 640;
-    float rgb_height = 480;
+    float rgb_fx_ = 453.183;
+    float rgb_fy_ = 453.183;
+    float rgb_cx_ = 333.191;
+    float rgb_cy_ = 241.26;
+    float rgb_width_ = 640;
+    float rgb_height_ = 480;
 
     // RGB to Depth
-    cv::Mat rgb_to_depth_rot = (cv::Mat_<float>(3, 3) << 
+    cv::Mat rgb_to_depth_rot_ = (cv::Mat_<float>(3, 3) << 
         0.999983, 0.0050659, -0.0028331,
         -0.0050672, 0.999987,-0.00045272,
         0.00283077, 0.000467068, 0.999996
     );
 
-    // Translation Vector (3x1)
-    cv::Mat rgb_to_depth_trans = (cv::Mat_<float>(3, 1) << 9.98615, -0.0882425, 0.675267);
+    // Translation Vector
+    cv::Mat rgb_to_depth_trans_ = (cv::Mat_<float>(3, 1) << 9.98615, -0.0882425, 0.675267);
 
-    cv::Mat depth_to_rgb_rot = (cv::Mat_<float>(3, 3) <<
+    cv::Mat depth_to_rgb_rot_ = (cv::Mat_<float>(3, 3) <<
         0.999983, -0.0050672, 0.00283077,
         0.0050659, 0.999987, 0.000467068,
         -0.0028331, -0.00045272, 0.999996
     );
 
-    cv::Mat depth_to_rgb_trans = (cv::Mat_<float>(3, 1) << -9.98834, 0.0373371, -0.647012);
+    cv::Mat depth_to_rgb_trans_ = (cv::Mat_<float>(3, 1) << -9.98834, 0.0373371, -0.647012);
 
 
 };

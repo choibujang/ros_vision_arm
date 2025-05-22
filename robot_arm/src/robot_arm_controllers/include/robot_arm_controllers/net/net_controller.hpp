@@ -29,7 +29,7 @@ private:
 
     int sockfd_;
     struct sockaddr_in server_addr_;
-    std::string server_ip_ = "192.168.0.24";
+    std::string server_ip_ = "192.168.249.253";
     int server_port_ = 8080;
     
     int frame_id_ = 0;
