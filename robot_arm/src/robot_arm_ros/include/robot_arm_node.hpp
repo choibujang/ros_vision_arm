@@ -31,9 +31,9 @@ public:
 
     explicit RobotArmNode(const rclcpp::NodeOptions & options = rclcpp::NodeOptions())
     : Node("robot_arm_node", options),
-        arm_controller(),
-        cam_controller(),
-        net_controller("192.168.0.92", 8080)
+        arm_controller_(),
+        cam_controller_(),
+        net_controller_()
     {
         using namespace std::placeholders;
 

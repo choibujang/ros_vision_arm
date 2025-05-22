@@ -1,8 +1,6 @@
 #include "robot_arm_controllers/net/net_controller.hpp"
 
-NetController::NetController(std::string ip, int port)
-: server_ip(ip), server_port(port)
-{
+NetController::NetController() {
     int try_cnt = 0;
     while (try_cnt < 5) {
         sockfd_ = socket(AF_INET, SOCK_DGRAM, 0);
@@ -27,6 +25,7 @@ NetController::NetController(std::string ip, int port)
 
 
 void NetController::sendMjpegData(std::vector<uint8_t> mjpeg_data) {
+    uint32_t device_id = device_id_;
     int total_size = mjpeg_data.size();
     int num_chunks = (total_size + MAX_CHUNK_SIZE - 1) / MAX_CHUNK_SIZE;
 
@@ -36,11 +35,12 @@ void NetController::sendMjpegData(std::vector<uint8_t> mjpeg_data) {
 
         std::vector<uint8_t> packet(HEADER_SIZE + chunk_size);
 
-        memcpy(packet.data(), &frame_id_, 4);
+        memcpy(packet.data(), &device_id, 4);
+        memcpy(packet.data() + 4, &frame_id_, 4);
         uint16_t chunk_idx = i;
         uint16_t total_chunks = num_chunks;
-        memcpy(packet.data() + 4, &chunk_idx, 2);
-        memcpy(packet.data() + 6, &total_chunks, 2);
+        memcpy(packet.data() + 8, &chunk_idx, 2);
+        memcpy(packet.data() + 10, &total_chunks, 2);
 
         memcpy(packet.data() + HEADER_SIZE, mjpeg_data.data() + offset, chunk_size);
 
