@@ -36,30 +36,15 @@ public:
      * @brief current_frameset에서 color frame을 가져온다.
      * @return 이미지 데이터를 담은 vector
      */
-    std::vector<uint8_t> getColorData();
-
-    /**
-     * @brief current_frameset에서 depth frame을 가져온다.
-     * @return depth 데이터를 담은 640*400 행렬
-     */ 
-    cv::Mat getDepthData();
-
-    /**
-     * @brief Depth 픽셀을 3D 좌표로 변환한 후, RGB 카메라 좌표계로 변환하고
-     *        이를 다시 RGB 이미지의 픽셀 위치로 변환하여, RGB 프레임 기준의 Depth map 생성.
-     *        RGB 이미지와 Depth 이미지의 해상도 차이로 인해
-     *        Depth = 0인 빈 영역은 3x3 주변 평균으로 보간하여 채움.
-     * @param depth 원본 Depth 데이터 (640 * 400)
-     * @return RGB 픽셀에 대응하는 depth map (640 * 480)
-     */
-    cv::Mat createDepthMap(const cv::Mat& depth);
+    std::vector<uint8_t> getColorFrame();
 
     /**
      * @brief RGB 이미지의 특정 픽셀 좌표를 카메라 좌표계 기준 3D 좌표로 변환한다.
-     * @param depth 원본 Depth 데이터 (640 * 400)
-     * @return RGB 픽셀에 대응하는 depth map (640 * 480)
+     * @param u RGB 이미지의 x좌표
+     * @param v RGB 이미지의 y좌표
+     * @return 해당 픽셀의 카메라 기준 3d 좌표
      */
-    std::vector<float> pixelToCameraCoords(int u, int v, const cv::Mat& depth_map);
+    std::vector<float> pixelToCameraCoords(int u, int v);
 
     /**
      * @brief 카메라의 intrinsic parameter들을 출력한다.
@@ -67,8 +52,23 @@ public:
     void getCameraParam();
     
 private:
+    /**
+     * @brief current_frameset에서 depth frame을 가져온다.
+     * @return depth 데이터를 담은 640*400 행렬
+     */ 
+     cv::Mat getDepthFrame();
+
+    /**
+     * @brief Depth Frame을 기반으로 RGB 카메라 기준으로 정렬된 Depth Map을 생성.
+     *        RGB 카메라와 Depth 카메라의 해상도 차이로 인해
+     *        Depth = 0인 빈 영역은 3x3 주변 평균으로 보간하여 채움.
+     */
+    void updateDepthMap();
+    
+    
     ob::Pipeline pipe_;
     std::shared_ptr<ob::FrameSet> current_frameset_;
+    cv::Mat current_depth_map_;
 
     float depth_fx_ = 475.328;
     float depth_fy_ = 475.328;

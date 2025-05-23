@@ -27,7 +27,6 @@ NetController::NetController() {
 
 
 void NetController::sendMjpegData(std::vector<uint8_t> mjpeg_data) {
-    std::cout << "Start sending data" << std::endl;
     uint32_t device_id = device_id_;
     int total_size = mjpeg_data.size();
     int num_chunks = (total_size + MAX_CHUNK_SIZE - 1) / MAX_CHUNK_SIZE;

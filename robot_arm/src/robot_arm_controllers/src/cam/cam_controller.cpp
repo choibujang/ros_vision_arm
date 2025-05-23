@@ -1,11 +1,12 @@
 #include "robot_arm_controllers/cam/cam_controller.hpp"
 
-cv::Mat CamController::createDepthMap(const cv::Mat& depth) {
-    cv::Mat aligned = cv::Mat::zeros(rgb_height_, rgb_width_, CV_16UC1);
+void CamController::updateDepthMap() {
+    cv::Mat current_depth_frame = getDepthFrame();
+    cv::Mat transformed = cv::Mat::zeros(rgb_height_, rgb_width_, CV_16UC1);
 
-    for (int vd = 0; vd < depth.rows; ++vd) {
-        for (int ud = 0; ud < depth.cols;) {
-            uint16_t z = depth.at<uint16_t>(vd, ud);
+    for (int vd = 0; vd < current_depth_frame.rows; ++vd) {
+        for (int ud = 0; ud < current_depth_frame.cols;) {
+            uint16_t z = current_depth_frame.at<uint16_t>(vd, ud);
             if (z == 0) continue;
 
             // Depth 픽셀 좌표를 Depth 카메라 좌표계의 3d 좌표로 변환
@@ -29,7 +30,7 @@ cv::Mat CamController::createDepthMap(const cv::Mat& depth) {
 
             // 범위 체크 후 저장
             if (u_rgb >= 0 && u_rgb < rgb_width_ && v_rgb >= 0 && v_rgb < rgb_height_) {
-                uint16_t& current = aligned.at<uint16_t>(v_rgb, u_rgb);
+                uint16_t& current = transformed.at<uint16_t>(v_rgb, u_rgb);
                 // 이미 값이 있다면 더 가까운 z만 저장
                 if (current == 0 || Zr < current) {
                     current = static_cast<uint16_t>(Zr);
@@ -40,17 +41,17 @@ cv::Mat CamController::createDepthMap(const cv::Mat& depth) {
     }
 
     // Z = 0인 빈 영역 3x3 평균으로 보간
-    cv::Mat filled = aligned.clone();
-    for (int y = 1; y < aligned.rows - 1; ++y) {
-        for (int x = 1; x < aligned.cols - 1; ++x) {
-            if (aligned.at<uint16_t>(y, x) == 0) {
+    cv::Mat filled = transformed.clone();
+    for (int y = 1; y < transformed.rows - 1; ++y) {
+        for (int x = 1; x < transformed.cols - 1; ++x) {
+            if (transformed.at<uint16_t>(y, x) == 0) {
                 int sum = 0;
                 int count = 0;
 
                 // 주변 3x3 이웃 평균
                 for (int dy = -1; dy <= 1; ++dy) {
                     for (int dx = -1; dx <= 1; ++dx) {
-                        uint16_t neighbor_z = aligned.at<uint16_t>(y + dy, x + dx);
+                        uint16_t neighbor_z = transformed.at<uint16_t>(y + dy, x + dx);
                         if (neighbor_z > 0) {
                             sum += neighbor_z;
                             count++;
@@ -65,7 +66,7 @@ cv::Mat CamController::createDepthMap(const cv::Mat& depth) {
         }
     }
 
-    return filled;
+    current_depth_map_ = filled.clone();
 
 }
 
@@ -149,7 +150,6 @@ bool CamController::getFrameSet(int timeout_ms, int max_cnt) {
 
         if (frameSet->colorFrame() && frameSet->depthFrame()) {
             current_frameset_ = frameSet;
-            std::cout << "Got frameSet from camera" << std::endl;
             return true;
         }
 
@@ -159,23 +159,23 @@ bool CamController::getFrameSet(int timeout_ms, int max_cnt) {
     return false;
 }
 
-std::vector<uint8_t> CamController::getColorData() {
+std::vector<uint8_t> CamController::getColorFrame() {
     std::cout << "Getting color data from colorFrame" << std::endl;
-    auto colorFrame = current_frameset_->colorFrame();
+    auto color_frame = current_frameset_->colorFrame();
 
-    uint8_t* data = (uint8_t*)colorFrame->data();
+    uint8_t* data = (uint8_t*)color_frame->data();
 
-    return std::vector<uint8_t> (data, data + colorFrame->dataSize());    
+    return std::vector<uint8_t> (data, data + color_frame->dataSize());    
 }
 
-cv::Mat CamController::getDepthData() {
-    auto depthFrame = current_frameset_->depthFrame();
+cv::Mat CamController::getDepthFrame() {
+    auto depth_frame = current_frameset_->depthFrame();
 
-    int depthWidth = depthFrame->width();
-    int depthHeight = depthFrame->height();
-    uint16_t* depthData = (uint16_t*)depthFrame->data();
+    int depth_width = depth_frame->width();
+    int depth_height = depth_frame->height();
+    uint16_t* depth_data = (uint16_t*)depth_frame->data();
 
-    cv::Mat depth_image(depthHeight, depthWidth, CV_16UC1, depthData);
+    cv::Mat depth_image(depth_height, depth_width, CV_16UC1, depth_data);
 
     return depth_image.clone();        
 }
@@ -184,8 +184,10 @@ void CamController::stopCameraPipeline() {
     pipe_.stop();
 }
     
-std::vector<float> CamController::pixelToCameraCoords(int u, int v, const cv::Mat& depth_map) {
-    float Z = depth_map.at<uint16_t>(v, u);
+std::vector<float> CamController::pixelToCameraCoords(int u, int v) {
+    updateDepthMap();
+
+    float Z = current_depth_map_.at<uint16_t>(v, u);
     float X = (u - rgb_cx_) * Z / rgb_fx_;
     float Y = (v - rgb_cy_) * Z / rgb_fy_;
     return {X, Y, Z};
