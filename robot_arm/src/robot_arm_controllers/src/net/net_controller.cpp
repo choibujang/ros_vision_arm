@@ -21,6 +21,8 @@ NetController::NetController() {
     server_addr_.sin_port = htons(server_port_);
     inet_pton(AF_INET, server_ip_.c_str(), &(server_addr_.sin_addr));
 
+    std::cout << "Finished NetController initialization" << std::endl;
+
 }
 
 

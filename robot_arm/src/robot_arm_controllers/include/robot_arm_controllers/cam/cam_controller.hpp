@@ -36,30 +36,15 @@ public:
      * @brief current_frameset에서 color frame을 가져온다.
      * @return 이미지 데이터를 담은 vector
      */
-    std::vector<uint8_t> getColorData();
-
-    /**
-     * @brief current_frameset에서 depth frame을 가져온다.
-     * @return depth 데이터를 담은 640*400 행렬
-     */ 
-    cv::Mat getDepthData();
-
-    /**
-     * @brief Depth 픽셀을 3D 좌표로 변환한 후, RGB 카메라 좌표계로 변환하고
-     *        이를 다시 RGB 이미지의 픽셀 위치로 변환하여, RGB 프레임 기준의 Depth map 생성.
-     *        RGB 이미지와 Depth 이미지의 해상도 차이로 인해
-     *        Depth = 0인 빈 영역은 3x3 주변 평균으로 보간하여 채움.
-     * @param depth 원본 Depth 데이터 (640 * 400)
-     * @return RGB 픽셀에 대응하는 depth map (640 * 480)
-     */
-    cv::Mat createDepthMap(const cv::Mat& depth);
+    std::vector<uint8_t> getColorFrame();
 
     /**
      * @brief RGB 이미지의 특정 픽셀 좌표를 카메라 좌표계 기준 3D 좌표로 변환한다.
-     * @param depth 원본 Depth 데이터 (640 * 400)
-     * @return RGB 픽셀에 대응하는 depth map (640 * 480)
+     * @param u RGB 이미지의 x좌표
+     * @param v RGB 이미지의 y좌표
+     * @return 해당 픽셀의 카메라 기준 3d 좌표
      */
-    vector<float> pixelToCameraCoords(int u, int v, cv::Mat& depth_map);
+    std::vector<float> pixelToCameraCoords(int u, int v);
 
     /**
      * @brief 카메라의 intrinsic parameter들을 출력한다.
@@ -67,40 +52,55 @@ public:
     void getCameraParam();
     
 private:
+    /**
+     * @brief current_frameset에서 depth frame을 가져온다.
+     * @return depth 데이터를 담은 640*400 행렬
+     */ 
+     cv::Mat getDepthFrame();
+
+    /**
+     * @brief Depth Frame을 기반으로 RGB 카메라 기준으로 정렬된 Depth Map을 생성.
+     *        RGB 카메라와 Depth 카메라의 해상도 차이로 인해
+     *        Depth = 0인 빈 영역은 3x3 주변 평균으로 보간하여 채움.
+     */
+    void updateDepthMap();
+    
+    
     ob::Pipeline pipe_;
     std::shared_ptr<ob::FrameSet> current_frameset_;
+    cv::Mat current_depth_map_;
 
-    float depth_fx = 475.328;
-    float depth_fy = 475.328;
-    float depth_cx = 315.204;
-    float depth_cy = 196.601;
-    float depth_width = 640;
-    float depth_height = 400;
+    float depth_fx_ = 475.328;
+    float depth_fy_ = 475.328;
+    float depth_cx_ = 315.204;
+    float depth_cy_ = 196.601;
+    float depth_width_ = 640;
+    float depth_height_ = 400;
 
-    float rgb_fx = 453.183;
-    float rgb_fy = 453.183;
-    float rgb_cx = 333.191;
-    float rgb_cy = 241.26;
-    float rgb_width = 640;
-    float rgb_height = 480;
+    float rgb_fx_ = 453.183;
+    float rgb_fy_ = 453.183;
+    float rgb_cx_ = 333.191;
+    float rgb_cy_ = 241.26;
+    float rgb_width_ = 640;
+    float rgb_height_ = 480;
 
     // RGB to Depth
-    cv::Mat rgb_to_depth_rot = (cv::Mat_<float>(3, 3) << 
+    cv::Mat rgb_to_depth_rot_ = (cv::Mat_<float>(3, 3) << 
         0.999983, 0.0050659, -0.0028331,
         -0.0050672, 0.999987,-0.00045272,
         0.00283077, 0.000467068, 0.999996
     );
 
-    // Translation Vector (3x1)
-    cv::Mat rgb_to_depth_trans = (cv::Mat_<float>(3, 1) << 9.98615, -0.0882425, 0.675267);
+    // Translation Vector
+    cv::Mat rgb_to_depth_trans_ = (cv::Mat_<float>(3, 1) << 9.98615, -0.0882425, 0.675267);
 
-    cv::Mat depth_to_rgb_rot = (cv::Mat_<float>(3, 3) <<
+    cv::Mat depth_to_rgb_rot_ = (cv::Mat_<float>(3, 3) <<
         0.999983, -0.0050672, 0.00283077,
         0.0050659, 0.999987, 0.000467068,
         -0.0028331, -0.00045272, 0.999996
     );
 
-    cv::Mat depth_to_rgb_trans = (cv::Mat_<float>(3, 1) << -9.98834, 0.0373371, -0.647012);
+    cv::Mat depth_to_rgb_trans_ = (cv::Mat_<float>(3, 1) << -9.98834, 0.0373371, -0.647012);
 
 
 };

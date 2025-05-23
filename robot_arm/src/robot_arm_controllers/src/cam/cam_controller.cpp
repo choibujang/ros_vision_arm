@@ -1,21 +1,22 @@
 #include "robot_arm_controllers/cam/cam_controller.hpp"
 
-cv::Mat CamController::createDepthMap(const cv::Mat& depth) {
-    cv::Mat aligned = cv::Mat::zeros(this->rgb_height, this->rgb_width, CV_16UC1);
+void CamController::updateDepthMap() {
+    cv::Mat current_depth_frame = getDepthFrame();
+    cv::Mat transformed = cv::Mat::zeros(rgb_height_, rgb_width_, CV_16UC1);
 
-    for (int vd = 0; vd < depth.rows; ++vd) {
-        for (int ud = 0; ud < depth.cols;) {
-            uint16_t z = depth.at<uint16_t>(vd, ud);
+    for (int vd = 0; vd < current_depth_frame.rows; ++vd) {
+        for (int ud = 0; ud < current_depth_frame.cols;) {
+            uint16_t z = current_depth_frame.at<uint16_t>(vd, ud);
             if (z == 0) continue;
 
             // Depth 픽셀 좌표를 Depth 카메라 좌표계의 3d 좌표로 변환
-            float Xd = (ud - this->depth_cx) * z / this->depth_fx;
-            float Yd = (vd - this->depth_cy) * z / this->depth_fy;
+            float Xd = (ud - depth_cx_) * z / depth_fx_;
+            float Yd = (vd - depth_cy_) * z / depth_fy_;
             float Zd = z;
 
             // Depth → RGB 카메라 좌표계로 변환
             cv::Mat depth_3d = (cv::Mat_<float>(3,1) << Xd, Yd, Zd);
-            cv::Mat rgb_3d = this->depth_to_rgb_rot * depth_3d + this->depth_to_rgb_trans;
+            cv::Mat rgb_3d = depth_to_rgb_rot_ * depth_3d + depth_to_rgb_trans_;
 
             float Xr = rgb_3d.at<float>(0);
             float Yr = rgb_3d.at<float>(1);
@@ -24,12 +25,12 @@ cv::Mat CamController::createDepthMap(const cv::Mat& depth) {
             if (Zr <= 0) continue; // 뒤에 있는 점 무시
 
             // RGB 카메라에서의 픽셀 위치
-            int u_rgb = static_cast<int>(this->rgb_fx * Xr / Zr + this->rgb_cx);
-            int v_rgb = static_cast<int>(this->rgb_fy * Yr / Zr + this->rgb_cy);
+            int u_rgb = static_cast<int>(rgb_fx_ * Xr / Zr + rgb_cx_);
+            int v_rgb = static_cast<int>(rgb_fy_ * Yr / Zr + rgb_cy_);
 
             // 범위 체크 후 저장
-            if (u_rgb >= 0 && u_rgb < this->rgb_width && v_rgb >= 0 && v_rgb < this->rgb_height) {
-                uint16_t& current = aligned.at<uint16_t>(v_rgb, u_rgb);
+            if (u_rgb >= 0 && u_rgb < rgb_width_ && v_rgb >= 0 && v_rgb < rgb_height_) {
+                uint16_t& current = transformed.at<uint16_t>(v_rgb, u_rgb);
                 // 이미 값이 있다면 더 가까운 z만 저장
                 if (current == 0 || Zr < current) {
                     current = static_cast<uint16_t>(Zr);
@@ -40,17 +41,17 @@ cv::Mat CamController::createDepthMap(const cv::Mat& depth) {
     }
 
     // Z = 0인 빈 영역 3x3 평균으로 보간
-    cv::Mat filled = aligned.clone();
-    for (int y = 1; y < aligned.rows - 1; ++y) {
-        for (int x = 1; x < aligned.cols - 1; ++x) {
-            if (aligned.at<uint16_t>(y, x) == 0) {
+    cv::Mat filled = transformed.clone();
+    for (int y = 1; y < transformed.rows - 1; ++y) {
+        for (int x = 1; x < transformed.cols - 1; ++x) {
+            if (transformed.at<uint16_t>(y, x) == 0) {
                 int sum = 0;
                 int count = 0;
 
                 // 주변 3x3 이웃 평균
                 for (int dy = -1; dy <= 1; ++dy) {
                     for (int dx = -1; dx <= 1; ++dx) {
-                        uint16_t neighbor_z = aligned.at<uint16_t>(y + dy, x + dx);
+                        uint16_t neighbor_z = transformed.at<uint16_t>(y + dy, x + dx);
                         if (neighbor_z > 0) {
                             sum += neighbor_z;
                             count++;
@@ -65,7 +66,7 @@ cv::Mat CamController::createDepthMap(const cv::Mat& depth) {
         }
     }
 
-    return filled;
+    current_depth_map_ = filled.clone();
 
 }
 
@@ -132,6 +133,8 @@ void CamController::startCameraPipeline() {
     // Start the pipeline with config
     pipe_.start(config);
     auto currentProfile = pipe_.getEnabledStreamProfileList()->getProfile(0)->as<ob::VideoStreamProfile>();
+
+    std::cout << "Start Pipeline" << std::endl;
 }
 
 bool CamController::getFrameSet(int timeout_ms, int max_cnt) {
@@ -140,6 +143,7 @@ bool CamController::getFrameSet(int timeout_ms, int max_cnt) {
     while (try_cnt < max_cnt) {
         auto frameSet = pipe_.waitForFrames(timeout_ms);
         if (!frameSet) {
+            std::cout << "Failed to get frameSet" << std::endl;
             try_cnt++;
             continue;
         }
@@ -155,22 +159,23 @@ bool CamController::getFrameSet(int timeout_ms, int max_cnt) {
     return false;
 }
 
-std::vector<uint8_t> CamController::getColorData() {
-    auto colorFrame = current_frameset_->colorFrame();
+std::vector<uint8_t> CamController::getColorFrame() {
+    std::cout << "Getting color data from colorFrame" << std::endl;
+    auto color_frame = current_frameset_->colorFrame();
 
-    uint8_t* data = (uint8_t*)colorFrame->data();
+    uint8_t* data = (uint8_t*)color_frame->data();
 
-    return std::vector<uint8_t> (data, data + colorFrame->dataSize());    
+    return std::vector<uint8_t> (data, data + color_frame->dataSize());    
 }
 
-cv::Mat CamController::getDepthData() {
-    auto depthFrame = current_frameset_->depthFrame();
+cv::Mat CamController::getDepthFrame() {
+    auto depth_frame = current_frameset_->depthFrame();
 
-    int depthWidth = depthFrame->width();
-    int depthHeight = depthFrame->height();
-    uint16_t* depthData = (uint16_t*)depthFrame->data();
+    int depth_width = depth_frame->width();
+    int depth_height = depth_frame->height();
+    uint16_t* depth_data = (uint16_t*)depth_frame->data();
 
-    cv::Mat depth_image(depthHeight, depthWidth, CV_16UC1, depthData);
+    cv::Mat depth_image(depth_height, depth_width, CV_16UC1, depth_data);
 
     return depth_image.clone();        
 }
@@ -179,8 +184,10 @@ void CamController::stopCameraPipeline() {
     pipe_.stop();
 }
     
-vector<float> CamController::pixelToCameraCoords(int u, int v, const cv::Mat& depth_map) {
-    float Z = depth_map.at<uint16_t>(v, u);
+std::vector<float> CamController::pixelToCameraCoords(int u, int v) {
+    updateDepthMap();
+
+    float Z = current_depth_map_.at<uint16_t>(v, u);
     float X = (u - rgb_cx_) * Z / rgb_fx_;
     float Y = (v - rgb_cy_) * Z / rgb_fy_;
     return {X, Y, Z};
