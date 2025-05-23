@@ -1,13 +1,12 @@
 import socket
-import struct
+from queue import Full
 from collections import defaultdict
 import time
 
 class UDPServer:
-    def __init__(self, queue):
-        self.host = 'localhost'
+    def __init__(self, frame_queue):
         self.port = 8080
-        self.queue = queue
+        self.frame_queue = frame_queue
 
         self.HEADER_SIZE = 12
         self.MAX_UDP_PAYLOAD = 65000
@@ -18,9 +17,9 @@ class UDPServer:
         self.recv_buffers = defaultdict(lambda: { 'chunks': {}, 'total': None, 'start': time.time() })
 
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        self.sock.bind((self.host, self.port))
+        self.sock.bind(("", self.port))
 
-        print(f"Start UDP server on {self.host}:{self.port}")
+        print(f"Start UDP server on:{self.port}")
 
     """"
     UDP로 수신되는 청크들을 조립해서 완전한 프레임으로 만든 후 큐에 넣는 함수.
@@ -54,7 +53,12 @@ class UDPServer:
             return
 
         data = b''.join([chunks[i] for i in sorted(chunks.keys())])
-        self.queue.put({ 'device_id': key[0], 'frame_id': key[1], 'data': data })
+        try:
+            self.frame_queue.put({ 'device_id': key[0], 'frame_id': key[1], 'data': data }, block=False)
+        except Full:
+            self.frame_queue.get()
+            self.frame_queue.put({ 'device_id': key[0], 'frame_id': key[1], 'data': data }, block=False)
+
         del self.recv_buffers[key]
 
     def buffer_cleaner(self):
